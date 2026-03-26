@@ -1,397 +1,660 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>競馬予想バックテスト 20260101〜20260322</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-  :root {
-    --bg: #0f172a; --card: #1e293b; --border: #334155;
-    --text: #e2e8f0; --muted: #94a3b8;
-    --green: #22c55e; --red: #ef4444; --blue: #3b82f6;
-    --yellow: #f59e0b; --purple: #a855f7;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 20px; }
-  h1 { font-size: 1.5rem; margin-bottom: 4px; }
-  .subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 24px; }
-  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 24px; }
-  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .kpi-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-  .kpi-value { font-size: 1.6rem; font-weight: 700; margin-top: 4px; }
-  .kpi-value.green { color: var(--green); } .kpi-value.red { color: var(--red); }
-  .kpi-value.blue { color: var(--blue); } .kpi-value.yellow { color: var(--yellow); }
-  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 24px; }
-  .filters h2 { font-size: 1rem; margin-bottom: 16px; color: var(--muted); }
-  .filter-row { display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start; }
-  .filter-group { display: flex; flex-direction: column; gap: 6px; min-width: 160px; }
-  .filter-group label { font-size: .8rem; color: var(--muted); }
-  .filter-group input[type=range] { width: 180px; accent-color: var(--blue); }
-  .filter-group input[type=number] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; width: 120px; font-size: .9rem; }
-  .cb-group { display: flex; flex-wrap: wrap; gap: 8px; }
-  .cb-label { display: flex; align-items: center; gap: 4px; font-size: .82rem; cursor: pointer; padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; transition: all .2s; }
-  .cb-label input { display: none; }
-  .cb-label:has(input:checked) { background: var(--blue); border-color: var(--blue); color: #fff; }
-  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-  .charts-grid .chart-full { grid-column: 1 / -1; }
-  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .chart-card h3 { font-size: .85rem; color: var(--muted); margin-bottom: 12px; }
-  .chart-card canvas { max-height: 220px; }
-  .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
-  .table-card h2 { font-size: 1rem; padding: 16px 20px; border-bottom: 1px solid var(--border); }
-  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-  th { background: #0f172a; padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 500; position: sticky; top: 0; }
-  td { padding: 9px 14px; border-bottom: 1px solid #1e293b; }
-  tr:hover td { background: #1e293b80; }
-  .hit { color: var(--green); font-weight: 600; }
-  .miss { color: var(--muted); }
-  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .75rem; font-weight: 600; }
-  .tag-win { background: #1e3a5f; color: #93c5fd; }
-  .tag-place { background: #1a3340; color: #67e8f9; }
-  .tag-q { background: #2d1f40; color: #c4b5fd; }
-  .tag-w { background: #2d3a1f; color: #86efac; }
-  .tag-e { background: #3a2a1f; color: #fdba74; }
-  .stats-row { display: flex; gap: 20px; padding: 12px 20px; background: #0f172a; font-size: .82rem; color: var(--muted); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-  .stats-row span b { color: var(--text); }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>競馬予想バックテスト 20260101〜20260322</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #3b82f6;
+      --yellow: #f59e0b;
+      --purple: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 4px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: .9rem;
+      margin-bottom: 24px;
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .kpi-label {
+      font-size: .75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .kpi-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+
+    .kpi-value.green {
+      color: var(--green);
+    }
+
+    .kpi-value.red {
+      color: var(--red);
+    }
+
+    .kpi-value.blue {
+      color: var(--blue);
+    }
+
+    .kpi-value.yellow {
+      color: var(--yellow);
+    }
+
+    .filters {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .filters h2 {
+      font-size: 1rem;
+      margin-bottom: 16px;
+      color: var(--muted);
+    }
+
+    .filter-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+    }
+
+    .filter-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 160px;
+    }
+
+    .filter-group label {
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    .filter-group input[type=range] {
+      width: 180px;
+      accent-color: var(--blue);
+    }
+
+    .filter-group input[type=number] {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: 120px;
+      font-size: .9rem;
+    }
+
+    .cb-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cb-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: .82rem;
+      cursor: pointer;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      transition: all .2s;
+    }
+
+    .cb-label input {
+      display: none;
+    }
+
+    .cb-label:has(input:checked) {
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .charts-grid .chart-full {
+      grid-column: 1 / -1;
+    }
+
+    .chart-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .chart-card h3 {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .chart-card canvas {
+      max-height: 220px;
+    }
+
+    .table-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .table-card h2 {
+      font-size: 1rem;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .82rem;
+    }
+
+    th {
+      background: #0f172a;
+      padding: 10px 14px;
+      text-align: left;
+      color: var(--muted);
+      font-weight: 500;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 9px 14px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    tr:hover td {
+      background: #1e293b80;
+    }
+
+    .hit {
+      color: var(--green);
+      font-weight: 600;
+    }
+
+    .miss {
+      color: var(--muted);
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+
+    .tag-win {
+      background: #1e3a5f;
+      color: #93c5fd;
+    }
+
+    .tag-place {
+      background: #1a3340;
+      color: #67e8f9;
+    }
+
+    .tag-q {
+      background: #2d1f40;
+      color: #c4b5fd;
+    }
+
+    .tag-w {
+      background: #2d3a1f;
+      color: #86efac;
+    }
+
+    .tag-e {
+      background: #3a2a1f;
+      color: #fdba74;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 20px;
+      padding: 12px 20px;
+      background: #0f172a;
+      font-size: .82rem;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .stats-row span b {
+      color: var(--text);
+    }
+  </style>
 </head>
+
 <body>
-<h1>🏇 競馬予想バックテストレポート</h1>
-<p class="subtitle">2026/01/01 〜 2026/03/22 ｜ モデル: LightGBM + XGBoost Ensemble</p>
+  <h1>🏇 競馬予想バックテストレポート</h1>
+  <p class="subtitle">2026/01/01 〜 2026/03/22 ｜ モデル: LightGBM + XGBoost Ensemble</p>
 
-<div class="kpi-grid">
-  <div class="kpi"><div class="kpi-label">回収率</div><div class="kpi-value green" id="kpi-rr">-</div></div>
-  <div class="kpi"><div class="kpi-label">純収支</div><div class="kpi-value green" id="kpi-profit">-</div></div>
-  <div class="kpi"><div class="kpi-label">的中率</div><div class="kpi-value blue" id="kpi-hr">-</div></div>
-  <div class="kpi"><div class="kpi-label">推奨件数</div><div class="kpi-value yellow" id="kpi-bets">-</div></div>
-  <div class="kpi"><div class="kpi-label">投資額</div><div class="kpi-value" id="kpi-inv">-</div></div>
-  <div class="kpi"><div class="kpi-label">払戻額</div><div class="kpi-value" id="kpi-pay">-</div></div>
-</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">回収率</div>
+      <div class="kpi-value green" id="kpi-rr">-</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">純収支</div>
+      <div class="kpi-value green" id="kpi-profit">-</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">的中率</div>
+      <div class="kpi-value blue" id="kpi-hr">-</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">推奨件数</div>
+      <div class="kpi-value yellow" id="kpi-bets">-</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">投資額</div>
+      <div class="kpi-value" id="kpi-inv">-</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">払戻額</div>
+      <div class="kpi-value" id="kpi-pay">-</div>
+    </div>
+  </div>
 
-<div class="filters">
-  <h2>🔧 フィルター設定</h2>
-  <div class="filter-row">
-    <div class="filter-group">
-      <label>初期運用資金 (円)</label>
-      <input type="number" id="budget" value="10000" min="1000" step="1000" oninput="updateAll()">
-    </div>
-    <div class="filter-group">
-      <label>ケリー係数: <b id="kelly-val">0.20</b></label>
-      <input type="range" id="kelly" min="0.05" max="1.0" step="0.05" value="0.2" oninput="document.getElementById('kelly-val').textContent=parseFloat(this.value).toFixed(2);updateAll()">
-    </div>
-    <div class="filter-group">
-      <label>最低EV: <b id="ev-val">2.80</b></label>
-      <input type="range" id="min-ev" min="1.0" max="15.0" step="0.1" value="2.8" oninput="document.getElementById('ev-val').textContent=parseFloat(this.value).toFixed(1);updateAll()">
-    </div>
-    <div class="filter-group">
-      <label>最低オッズ: <b id="odds-val">1.0</b></label>
-      <input type="range" id="min-odds" min="1.0" max="50.0" step="0.5" value="1.0" oninput="document.getElementById('odds-val').textContent=parseFloat(this.value).toFixed(1);updateAll()">
-    </div>
-    <div class="filter-group">
-      <label>券種</label>
-      <div class="cb-group" id="type-filters">
-        <label class="cb-label"><input type="checkbox" value="単勝" checked onchange="updateAll()">単勝</label>
-        <label class="cb-label"><input type="checkbox" value="複勝" checked onchange="updateAll()">複勝</label>
-        <label class="cb-label"><input type="checkbox" value="馬連" onchange="updateAll()">馬連</label>
-        <label class="cb-label"><input type="checkbox" value="ワイド" onchange="updateAll()">ワイド</label>
-        <label class="cb-label"><input type="checkbox" value="馬単" onchange="updateAll()">馬単</label>
+  <div class="filters">
+    <h2>🔧 フィルター設定</h2>
+    <div class="filter-row">
+      <div class="filter-group">
+        <label>初期運用資金 (円)</label>
+        <input type="number" id="budget" value="10000" min="1000" step="1000" oninput="updateAll()">
+      </div>
+      <div class="filter-group">
+        <label>ケリー係数: <b id="kelly-val">0.20</b></label>
+        <input type="range" id="kelly" min="0.05" max="1.0" step="0.05" value="0.2"
+          oninput="document.getElementById('kelly-val').textContent=parseFloat(this.value).toFixed(2);updateAll()">
+      </div>
+      <div class="filter-group">
+        <label>最低EV: <b id="ev-val">2.80</b></label>
+        <input type="range" id="min-ev" min="1.0" max="15.0" step="0.1" value="2.8"
+          oninput="document.getElementById('ev-val').textContent=parseFloat(this.value).toFixed(1);updateAll()">
+      </div>
+      <div class="filter-group">
+        <label>最低オッズ: <b id="odds-val">1.0</b></label>
+        <input type="range" id="min-odds" min="1.0" max="50.0" step="0.5" value="1.0"
+          oninput="document.getElementById('odds-val').textContent=parseFloat(this.value).toFixed(1);updateAll()">
+      </div>
+      <div class="filter-group">
+        <label>券種</label>
+        <div class="cb-group" id="type-filters">
+          <label class="cb-label"><input type="checkbox" value="単勝" checked onchange="updateAll()">単勝</label>
+          <label class="cb-label"><input type="checkbox" value="複勝" checked onchange="updateAll()">複勝</label>
+          <label class="cb-label"><input type="checkbox" value="馬連" onchange="updateAll()">馬連</label>
+          <label class="cb-label"><input type="checkbox" value="ワイド" onchange="updateAll()">ワイド</label>
+          <label class="cb-label"><input type="checkbox" value="馬単" onchange="updateAll()">馬単</label>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>開催場</label>
+        <div class="cb-group" id="venue-filters">
+          <label class="cb-label"><input type="checkbox" value="東京" checked onchange="updateAll()">東京</label>
+          <label class="cb-label"><input type="checkbox" value="阪神" checked onchange="updateAll()">阪神</label>
+          <label class="cb-label"><input type="checkbox" value="中山" checked onchange="updateAll()">中山</label>
+          <label class="cb-label"><input type="checkbox" value="京都" checked onchange="updateAll()">京都</label>
+          <label class="cb-label"><input type="checkbox" value="他" checked onchange="updateAll()">他</label>
+        </div>
       </div>
     </div>
-    <div class="filter-group">
-      <label>開催場</label>
-      <div class="cb-group" id="venue-filters">
-        <label class="cb-label"><input type="checkbox" value="東京" checked onchange="updateAll()">東京</label>
-        <label class="cb-label"><input type="checkbox" value="阪神" checked onchange="updateAll()">阪神</label>
-        <label class="cb-label"><input type="checkbox" value="中山" checked onchange="updateAll()">中山</label>
-        <label class="cb-label"><input type="checkbox" value="京都" checked onchange="updateAll()">京都</label>
-        <label class="cb-label"><input type="checkbox" value="他" checked onchange="updateAll()">他</label>
-      </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card chart-full">
+      <h3>📈 累積損益推移</h3>
+      <canvas id="chart-pnl"></canvas>
+    </div>
+    <div class="chart-card chart-full">
+      <h3>🔄 30日ローリング回収率</h3>
+      <canvas id="chart-rolling"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>📉 最大ドローダウン</h3>
+      <canvas id="chart-dd"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>📅 月別純収支</h3>
+      <canvas id="chart-monthly"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>🎫 券種別回収率</h3>
+      <canvas id="chart-type"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>⚡ EV帯別実績</h3>
+      <canvas id="chart-ev"></canvas>
+    </div>
+    <div class="chart-card chart-full">
+      <h3>🎯 確率キャリブレーション（予測確率 vs 実的中率）</h3>
+      <canvas id="chart-calib"></canvas>
     </div>
   </div>
-</div>
 
-<div class="charts-grid">
-  <div class="chart-card chart-full">
-    <h3>📈 累積損益推移</h3>
-    <canvas id="chart-pnl"></canvas>
+  <div class="table-card">
+    <h2>📋 推奨馬券詳細</h2>
+    <div class="stats-row" id="stats-row"></div>
+    <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>日付</th>
+            <th>開催</th>
+            <th>R</th>
+            <th>レース名</th>
+            <th>券種</th>
+            <th>組み合わせ</th>
+            <th>オッズ</th>
+            <th>EV</th>
+            <th>投資額</th>
+            <th>積立</th>
+            <th>結果</th>
+            <th>払戻</th>
+          </tr>
+        </thead>
+        <tbody id="bet-tbody"></tbody>
+      </table>
+    </div>
   </div>
-  <div class="chart-card chart-full">
-    <h3>🔄 30日ローリング回収率</h3>
-    <canvas id="chart-rolling"></canvas>
-  </div>
-  <div class="chart-card">
-    <h3>📉 最大ドローダウン</h3>
-    <canvas id="chart-dd"></canvas>
-  </div>
-  <div class="chart-card">
-    <h3>📅 月別純収支</h3>
-    <canvas id="chart-monthly"></canvas>
-  </div>
-  <div class="chart-card">
-    <h3>🎫 券種別回収率</h3>
-    <canvas id="chart-type"></canvas>
-  </div>
-  <div class="chart-card">
-    <h3>⚡ EV帯別実績</h3>
-    <canvas id="chart-ev"></canvas>
-  </div>
-  <div class="chart-card chart-full">
-    <h3>🎯 確率キャリブレーション（予測確率 vs 実的中率）</h3>
-    <canvas id="chart-calib"></canvas>
-  </div>
-</div>
 
-<div class="table-card">
-  <h2>📋 推奨馬券詳細</h2>
-  <div class="stats-row" id="stats-row"></div>
-  <div style="overflow-x:auto; max-height:600px; overflow-y:auto;">
-    <table>
-      <thead>
-        <tr>
-          <th>日付</th><th>開催</th><th>R</th><th>レース名</th>
-          <th>券種</th><th>組み合わせ</th><th>オッズ</th><th>EV</th>
-          <th>投資額</th><th>積立</th><th>結果</th><th>払戻</th>
-        </tr>
-      </thead>
-      <tbody id="bet-tbody"></tbody>
-    </table>
-  </div>
-</div>
+  <script>
+    const RAW = [{ "date": "20260104", "venue": "京都", "vg": "京都", "R": 10, "race": "寿S", "type": "単勝", "combo": "7", "prob": 0.3434, "ev": 4.7739, "odds": 13.9, "hit": 0, "payout": 0.0 }, { "date": "20260104", "venue": "京都", "vg": "京都", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "4", "prob": 0.3495, "ev": 12.5473, "odds": 35.9, "hit": 0, "payout": 0.0 }, { "date": "20260104", "venue": "中山", "vg": "中山", "R": 6, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.0907, "ev": 4.8544, "odds": 53.5, "hit": 0, "payout": 0.0 }, { "date": "20260105", "venue": "中山", "vg": "中山", "R": 8, "race": "中山新春JS", "type": "単勝", "combo": "5", "prob": 0.3206, "ev": 7.2459, "odds": 22.6, "hit": 1, "payout": 11300.0 }, { "date": "20260110", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳新馬", "type": "単勝", "combo": "6", "prob": 0.0845, "ev": 4.6205, "odds": 54.7, "hit": 0, "payout": 0.0 }, { "date": "20260110", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "8", "prob": 0.1209, "ev": 7.0487, "odds": 58.3, "hit": 0, "payout": 0.0 }, { "date": "20260110", "venue": "中山", "vg": "中山", "R": 10, "race": "初凪賞", "type": "単勝", "combo": "1", "prob": 0.2752, "ev": 5.8616, "odds": 21.3, "hit": 0, "payout": 0.0 }, { "date": "20260111", "venue": "中山", "vg": "中山", "R": 10, "race": "ポルックスS", "type": "単勝", "combo": "12", "prob": 0.1977, "ev": 3.6182, "odds": 18.3, "hit": 0, "payout": 0.0 }, { "date": "20260111", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2264, "ev": 5.0711, "odds": 22.4, "hit": 0, "payout": 0.0 }, { "date": "20260112", "venue": "中山", "vg": "中山", "R": 9, "race": "成田特別", "type": "単勝", "combo": "2", "prob": 0.1987, "ev": 3.5374, "odds": 17.8, "hit": 1, "payout": 5340.0 }, { "date": "20260112", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "7", "prob": 0.2114, "ev": 4.6286, "odds": 21.9, "hit": 0, "payout": 0.0 }, { "date": "20260112", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "16", "prob": 0.1036, "ev": 5.6781, "odds": 54.8, "hit": 0, "payout": 0.0 }, { "date": "20260117", "venue": "中山", "vg": "中山", "R": 10, "race": "アレキサンドライトS", "type": "単勝", "combo": "13", "prob": 0.2146, "ev": 3.5836, "odds": 16.7, "hit": 0, "payout": 0.0 }, { "date": "20260117", "venue": "京都", "vg": "京都", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "14", "prob": 0.0854, "ev": 4.0467, "odds": 47.4, "hit": 0, "payout": 0.0 }, { "date": "20260118", "venue": "京都", "vg": "京都", "R": 9, "race": "小倉山特別", "type": "単勝", "combo": "3", "prob": 0.3037, "ev": 4.4642, "odds": 14.7, "hit": 1, "payout": 7350.0 }, { "date": "20260118", "venue": "京都", "vg": "京都", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.1894, "ev": 3.4665, "odds": 18.3, "hit": 0, "payout": 0.0 }, { "date": "20260118", "venue": "京都", "vg": "京都", "R": 4, "race": "3歳1勝クラス", "type": "単勝", "combo": "3", "prob": 0.2375, "ev": 4.8689, "odds": 20.5, "hit": 0, "payout": 0.0 }, { "date": "20260118", "venue": "中山", "vg": "中山", "R": 10, "race": "ジャニュアリーS", "type": "単勝", "combo": "13", "prob": 0.4145, "ev": 7.5855, "odds": 18.3, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.2194, "ev": 9.9588, "odds": 45.4, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "中山", "vg": "中山", "R": 9, "race": "東雲賞", "type": "単勝", "combo": "1", "prob": 0.1697, "ev": 3.7504, "odds": 22.1, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "中山", "vg": "中山", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "4", "prob": 0.2451, "ev": 3.4321, "odds": 14.0, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.0877, "ev": 3.8586, "odds": 44.0, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "京都", "vg": "京都", "R": 10, "race": "下鴨S", "type": "単勝", "combo": "8", "prob": 0.1181, "ev": 6.1172, "odds": 51.8, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "小倉", "vg": "他", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.2024, "ev": 10.3018, "odds": 50.9, "hit": 0, "payout": 0.0 }, { "date": "20260124", "venue": "小倉", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "10", "prob": 0.1995, "ev": 4.3287, "odds": 21.7, "hit": 0, "payout": 0.0 }, { "date": "20260125", "venue": "小倉", "vg": "他", "R": 4, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "2", "prob": 0.2607, "ev": 6.5431, "odds": 25.1, "hit": 0, "payout": 0.0 }, { "date": "20260125", "venue": "小倉", "vg": "他", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "14", "prob": 0.3886, "ev": 7.2281, "odds": 18.6, "hit": 0, "payout": 0.0 }, { "date": "20260125", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.3174, "ev": 5.9979, "odds": 18.9, "hit": 0, "payout": 0.0 }, { "date": "20260131", "venue": "小倉", "vg": "他", "R": 5, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "4", "prob": 0.1832, "ev": 5.3118, "odds": 29.0, "hit": 0, "payout": 0.0 }, { "date": "20260131", "venue": "小倉", "vg": "他", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "5", "prob": 0.1969, "ev": 10.4177, "odds": 52.9, "hit": 0, "payout": 0.0 }, { "date": "20260131", "venue": "小倉", "vg": "他", "R": 11, "race": "巌流島S", "type": "単勝", "combo": "11", "prob": 0.2288, "ev": 4.53, "odds": 19.8, "hit": 0, "payout": 0.0 }, { "date": "20260131", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2549, "ev": 7.0602, "odds": 27.7, "hit": 0, "payout": 0.0 }, { "date": "20260131", "venue": "東京", "vg": "東京", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "12", "prob": 0.1024, "ev": 3.3999, "odds": 33.2, "hit": 0, "payout": 0.0 }, { "date": "20260201", "venue": "小倉", "vg": "他", "R": 9, "race": "足立山特別", "type": "単勝", "combo": "6", "prob": 0.3872, "ev": 8.9835, "odds": 23.2, "hit": 0, "payout": 0.0 }, { "date": "20260201", "venue": "東京", "vg": "東京", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "5", "prob": 0.3938, "ev": 4.135, "odds": 10.5, "hit": 0, "payout": 0.0 }, { "date": "20260201", "venue": "小倉", "vg": "他", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "11", "prob": 0.0917, "ev": 5.0366, "odds": 54.9, "hit": 0, "payout": 0.0 }, { "date": "20260208", "venue": "小倉", "vg": "他", "R": 10, "race": "由布院特別", "type": "単勝", "combo": "13", "prob": 0.2212, "ev": 5.0656, "odds": 22.9, "hit": 0, "payout": 0.0 }, { "date": "20260210", "venue": "東京", "vg": "東京", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.087, "ev": 4.2384, "odds": 48.7, "hit": 0, "payout": 0.0 }, { "date": "20260210", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "14", "prob": 0.2105, "ev": 7.0739, "odds": 33.6, "hit": 1, "payout": 10080.0 }, { "date": "20260210", "venue": "京都", "vg": "京都", "R": 10, "race": "大和S", "type": "単勝", "combo": "9", "prob": 0.1576, "ev": 3.4525, "odds": 21.9, "hit": 0, "payout": 0.0 }, { "date": "20260210", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳未勝利", "type": "単勝", "combo": "2", "prob": 0.2543, "ev": 3.7643, "odds": 14.8, "hit": 0, "payout": 0.0 }, { "date": "20260214", "venue": "東京", "vg": "東京", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "16", "prob": 0.0816, "ev": 4.7708, "odds": 58.5, "hit": 0, "payout": 0.0 }, { "date": "20260214", "venue": "小倉", "vg": "他", "R": 8, "race": "小倉ジャンプS", "type": "単勝", "combo": "4", "prob": 0.1962, "ev": 9.8281, "odds": 50.1, "hit": 0, "payout": 0.0 }, { "date": "20260214", "venue": "小倉", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.163, "ev": 4.498, "odds": 27.6, "hit": 0, "payout": 0.0 }, { "date": "20260214", "venue": "小倉", "vg": "他", "R": 2, "race": "3歳未勝利", "type": "単勝", "combo": "17", "prob": 0.399, "ev": 3.7904, "odds": 9.5, "hit": 0, "payout": 0.0 }, { "date": "20260214", "venue": "小倉", "vg": "他", "R": 3, "race": "3歳未勝利", "type": "単勝", "combo": "14", "prob": 0.2042, "ev": 3.5726, "odds": 17.5, "hit": 0, "payout": 0.0 }, { "date": "20260215", "venue": "京都", "vg": "京都", "R": 2, "race": "3歳新馬", "type": "単勝", "combo": "8", "prob": 0.1349, "ev": 4.399, "odds": 32.6, "hit": 0, "payout": 0.0 }, { "date": "20260215", "venue": "京都", "vg": "京都", "R": 6, "race": "3歳未勝利", "type": "単勝", "combo": "2", "prob": 0.3116, "ev": 3.4899, "odds": 11.2, "hit": 1, "payout": 4480.0 }, { "date": "20260215", "venue": "東京", "vg": "東京", "R": 9, "race": "雲雀S", "type": "単勝", "combo": "11", "prob": 0.2011, "ev": 11.1791, "odds": 55.6, "hit": 0, "payout": 0.0 }, { "date": "20260221", "venue": "小倉", "vg": "他", "R": 4, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "6", "prob": 0.1964, "ev": 6.2646, "odds": 31.9, "hit": 0, "payout": 0.0 }, { "date": "20260221", "venue": "東京", "vg": "東京", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "4", "prob": 0.2343, "ev": 3.4446, "odds": 14.7, "hit": 0, "payout": 0.0 }, { "date": "20260221", "venue": "阪神", "vg": "阪神", "R": 9, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.2478, "ev": 4.1638, "odds": 16.8, "hit": 0, "payout": 0.0 }, { "date": "20260222", "venue": "東京", "vg": "東京", "R": 11, "race": "フェブラリーS", "type": "単勝", "combo": "13", "prob": 0.4317, "ev": 9.2392, "odds": 21.4, "hit": 0, "payout": 0.0 }, { "date": "20260222", "venue": "阪神", "vg": "阪神", "R": 11, "race": "令月S", "type": "単勝", "combo": "5", "prob": 0.3739, "ev": 3.5516, "odds": 9.5, "hit": 0, "payout": 0.0 }, { "date": "20260228", "venue": "小倉", "vg": "他", "R": 5, "race": "4歳以上障害OP", "type": "単勝", "combo": "10", "prob": 0.261, "ev": 6.8894, "odds": 26.4, "hit": 0, "payout": 0.0 }, { "date": "20260228", "venue": "小倉", "vg": "他", "R": 9, "race": "背振山特別", "type": "単勝", "combo": "12", "prob": 0.4345, "ev": 3.9108, "odds": 9.0, "hit": 1, "payout": 6300.0 }, { "date": "20260228", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "6", "prob": 0.201, "ev": 7.315, "odds": 36.4, "hit": 0, "payout": 0.0 }, { "date": "20260301", "venue": "阪神", "vg": "阪神", "R": 9, "race": "山陽特別", "type": "単勝", "combo": "6", "prob": 0.3525, "ev": 9.9768, "odds": 28.3, "hit": 0, "payout": 0.0 }, { "date": "20260301", "venue": "阪神", "vg": "阪神", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "13", "prob": 0.225, "ev": 7.9861, "odds": 35.5, "hit": 0, "payout": 0.0 }, { "date": "20260307", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.1888, "ev": 4.0782, "odds": 21.6, "hit": 0, "payout": 0.0 }, { "date": "20260307", "venue": "中山", "vg": "中山", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "16", "prob": 0.1968, "ev": 3.5233, "odds": 17.9, "hit": 0, "payout": 0.0 }, { "date": "20260307", "venue": "阪神", "vg": "阪神", "R": 8, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "4", "prob": 0.1712, "ev": 3.4412, "odds": 20.1, "hit": 0, "payout": 0.0 }, { "date": "20260307", "venue": "阪神", "vg": "阪神", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "7", "prob": 0.5964, "ev": 5.368, "odds": 9.0, "hit": 0, "payout": 0.0 }, { "date": "20260308", "venue": "阪神", "vg": "阪神", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "6", "prob": 0.3368, "ev": 3.5361, "odds": 10.5, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 11, "race": "中京スポーツ杯", "type": "複勝", "combo": "4", "prob": 0.1014, "ev": 8.0061, "odds": 79.0, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "馬単", "combo": "9-11", "prob": 0.1951, "ev": 4.5058, "odds": 23.1, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "6", "prob": 0.1455, "ev": 11.0709, "odds": 76.1, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上1勝クラス", "type": "馬単", "combo": "6-7", "prob": 0.1361, "ev": 4.0699, "odds": 29.9, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "阪神", "vg": "阪神", "R": 9, "race": "讃岐特別", "type": "複勝", "combo": "10", "prob": 0.1239, "ev": 4.9309, "odds": 39.8, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "阪神", "vg": "阪神", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "9", "prob": 0.2102, "ev": 4.2204, "odds": 20.1, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "阪神", "vg": "阪神", "R": 6, "race": "4歳以上1勝クラス", "type": "馬単", "combo": "13-10", "prob": 0.0749, "ev": 4.1655, "odds": 55.6, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 8, "race": "4歳以上1勝クラス", "type": "馬単", "combo": "16-14", "prob": 0.0746, "ev": 4.0434, "odds": 54.2, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "阪神", "vg": "阪神", "R": 6, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "3", "prob": 0.086, "ev": 13.4471, "odds": 156.4, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "6-8", "prob": 0.1554, "ev": 7.022, "odds": 45.2, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 8, "race": "4歳以上1勝クラス", "type": "馬単", "combo": "14-16", "prob": 0.0941, "ev": 3.6318, "odds": 38.6, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "11-16", "prob": 0.0596, "ev": 3.4175, "odds": 57.3, "hit": 0, "payout": 0.0 }, { "date": "20260314", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "11-5", "prob": 0.1651, "ev": 4.1931, "odds": 25.4, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 11, "race": "米子城S", "type": "単勝", "combo": "10", "prob": 0.1285, "ev": 4.1901, "odds": 32.6, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 10, "race": "甲南S", "type": "馬単", "combo": "5-7", "prob": 0.1071, "ev": 3.6833, "odds": 34.4, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "4-6", "prob": 0.3105, "ev": 4.3777, "odds": 14.1, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 3, "race": "3歳未勝利", "type": "馬単", "combo": "11-14", "prob": 0.059, "ev": 3.6122, "odds": 61.2, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 3, "race": "3歳未勝利", "type": "単勝", "combo": "11", "prob": 0.2152, "ev": 4.7779, "odds": 22.2, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上2勝クラス", "type": "複勝", "combo": "3", "prob": 0.119, "ev": 8.6113, "odds": 72.3, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "阪神", "vg": "阪神", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "4-3", "prob": 0.0951, "ev": 3.869, "odds": 40.7, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中京", "vg": "他", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "3-9", "prob": 0.1429, "ev": 5.1737, "odds": 36.2, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中京", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "3", "prob": 0.2257, "ev": 4.6727, "odds": 20.7, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中山", "vg": "中山", "R": 11, "race": "スプリングS", "type": "馬単", "combo": "13-12", "prob": 0.1317, "ev": 3.6336, "odds": 27.6, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "1", "prob": 0.1174, "ev": 4.3144, "odds": 36.8, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "複勝", "combo": "5", "prob": 0.0551, "ev": 3.7042, "odds": 67.3, "hit": 0, "payout": 0.0 }, { "date": "20260315", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳未勝利", "type": "複勝", "combo": "11", "prob": 0.0517, "ev": 4.109, "odds": 79.5, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 2, "race": "3歳未勝利", "type": "馬単", "combo": "6-9", "prob": 0.1559, "ev": 9.5417, "odds": 61.2, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 10, "race": "淀屋橋S", "type": "複勝", "combo": "12", "prob": 0.112, "ev": 3.462, "odds": 30.9, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "16-6", "prob": 0.3036, "ev": 10.6853, "odds": 35.2, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中京", "vg": "他", "R": 6, "race": "3歳未勝利", "type": "馬単", "combo": "4-1", "prob": 0.1103, "ev": 5.0421, "odds": 45.7, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中京", "vg": "他", "R": 9, "race": "岡崎特別", "type": "馬単", "combo": "3-4", "prob": 0.0679, "ev": 4.237, "odds": 62.4, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "10", "prob": 0.2985, "ev": 5.2114, "odds": 17.5, "hit": 1, "payout": 7750.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "5", "prob": 0.1243, "ev": 7.316, "odds": 58.9, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "5-1", "prob": 0.097, "ev": 3.444, "odds": 35.5, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "6-1", "prob": 0.0897, "ev": 4.8279, "odds": 53.8, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "1-6", "prob": 0.1106, "ev": 3.4607, "odds": 31.3, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳未勝利", "type": "馬単", "combo": "12-4", "prob": 0.1201, "ev": 6.8563, "odds": 57.1, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "単勝", "combo": "1", "prob": 0.2311, "ev": 6.193, "odds": 26.8, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 9, "race": "淡路特別", "type": "複勝", "combo": "7", "prob": 0.155, "ev": 3.7471, "odds": 24.2, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中京", "vg": "他", "R": 10, "race": "豊明S", "type": "複勝", "combo": "12", "prob": 0.0705, "ev": 15.8433, "odds": 224.6, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 4, "race": "3歳未勝利", "type": "単勝", "combo": "10", "prob": 0.4372, "ev": 6.1639, "odds": 14.1, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 9, "race": "館山特別", "type": "馬単", "combo": "4-13", "prob": 0.0906, "ev": 3.5858, "odds": 39.6, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 9, "race": "館山特別", "type": "馬単", "combo": "13-4", "prob": 0.1348, "ev": 3.9764, "odds": 29.5, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "阪神", "vg": "阪神", "R": 5, "race": "3歳未勝利", "type": "馬単", "combo": "15-6", "prob": 0.0721, "ev": 3.6717, "odds": 50.9, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "3", "prob": 0.1435, "ev": 6.8962, "odds": 48.0, "hit": 1, "payout": 3360.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "1-5", "prob": 0.0833, "ev": 3.7733, "odds": 45.3, "hit": 0, "payout": 0.0 }, { "date": "20260321", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "6", "prob": 0.1099, "ev": 7.3072, "odds": 66.5, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "3-2", "prob": 0.1155, "ev": 6.8366, "odds": 59.2, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中京", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.2117, "ev": 4.3192, "odds": 20.4, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中京", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.2201, "ev": 5.1721, "odds": 23.5, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "3-1", "prob": 0.1618, "ev": 5.7909, "odds": 35.8, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "1-3", "prob": 0.1618, "ev": 4.1086, "odds": 25.4, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "2-8", "prob": 0.1628, "ev": 6.2694, "odds": 38.5, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "単勝", "combo": "13", "prob": 0.4553, "ev": 10.1977, "odds": 22.4, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "13-4", "prob": 0.1461, "ev": 7.8183, "odds": 53.5, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 4, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "10", "prob": 0.2568, "ev": 4.3137, "odds": 16.8, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 4, "race": "4歳以上障害未勝利", "type": "馬単", "combo": "10-7", "prob": 0.0632, "ev": 3.5376, "odds": 56.0, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "単勝", "combo": "13", "prob": 0.6746, "ev": 6.2741, "odds": 9.3, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "複勝", "combo": "6", "prob": 0.07, "ev": 5.3327, "odds": 76.2, "hit": 1, "payout": 360.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "10", "prob": 0.4426, "ev": 5.4438, "odds": 12.3, "hit": 0, "payout": 0.0 }, { "date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "2-3", "prob": 0.2287, "ev": 6.6314, "odds": 29.0, "hit": 0, "payout": 0.0 }];
+    const TYPE_TAG = { "単勝": "tag-win", "複勝": "tag-place", "馬連": "tag-q", "ワイド": "tag-w", "馬単": "tag-e" };
 
-<script>
-const RAW = [{"date": "20260104", "venue": "京都", "vg": "京都", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "4", "prob": 0.3464, "ev": 12.4351, "odds": 35.9, "hit": 0, "payout": 0.0}, {"date": "20260104", "venue": "中山", "vg": "中山", "R": 6, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.0907, "ev": 4.8518, "odds": 53.5, "hit": 0, "payout": 0.0}, {"date": "20260104", "venue": "京都", "vg": "京都", "R": 10, "race": "寿S", "type": "単勝", "combo": "7", "prob": 0.3244, "ev": 4.5087, "odds": 13.9, "hit": 0, "payout": 0.0}, {"date": "20260104", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "7", "prob": 0.3135, "ev": 3.5743, "odds": 11.4, "hit": 0, "payout": 0.0}, {"date": "20260105", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.2305, "ev": 5.0699, "odds": 22.0, "hit": 0, "payout": 0.0}, {"date": "20260110", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳新馬", "type": "単勝", "combo": "6", "prob": 0.087, "ev": 4.7564, "odds": 54.7, "hit": 0, "payout": 0.0}, {"date": "20260110", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "8", "prob": 0.112, "ev": 6.5323, "odds": 58.3, "hit": 0, "payout": 0.0}, {"date": "20260110", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳未勝利", "type": "単勝", "combo": "14", "prob": 0.1983, "ev": 6.5049, "odds": 32.8, "hit": 0, "payout": 0.0}, {"date": "20260110", "venue": "中山", "vg": "中山", "R": 10, "race": "初凪賞", "type": "単勝", "combo": "1", "prob": 0.2217, "ev": 4.7219, "odds": 21.3, "hit": 0, "payout": 0.0}, {"date": "20260110", "venue": "中山", "vg": "中山", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "15", "prob": 0.244, "ev": 3.6352, "odds": 14.9, "hit": 0, "payout": 0.0}, {"date": "20260111", "venue": "京都", "vg": "京都", "R": 11, "race": "淀短距離S", "type": "単勝", "combo": "15", "prob": 0.2058, "ev": 6.132, "odds": 29.8, "hit": 0, "payout": 0.0}, {"date": "20260111", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2133, "ev": 4.7782, "odds": 22.4, "hit": 0, "payout": 0.0}, {"date": "20260111", "venue": "中山", "vg": "中山", "R": 10, "race": "ポルックスS", "type": "単勝", "combo": "12", "prob": 0.2101, "ev": 3.8456, "odds": 18.3, "hit": 0, "payout": 0.0}, {"date": "20260111", "venue": "京都", "vg": "京都", "R": 2, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.077, "ev": 3.4817, "odds": 45.2, "hit": 0, "payout": 0.0}, {"date": "20260112", "venue": "京都", "vg": "京都", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "17", "prob": 0.0751, "ev": 3.4306, "odds": 45.7, "hit": 0, "payout": 0.0}, {"date": "20260112", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "7", "prob": 0.2325, "ev": 5.0913, "odds": 21.9, "hit": 0, "payout": 0.0}, {"date": "20260112", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "16", "prob": 0.0861, "ev": 4.7168, "odds": 54.8, "hit": 0, "payout": 0.0}, {"date": "20260117", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "8", "prob": 0.2273, "ev": 4.9092, "odds": 21.6, "hit": 1, "payout": 6480.0}, {"date": "20260117", "venue": "中山", "vg": "中山", "R": 10, "race": "アレキサンドライトS", "type": "単勝", "combo": "13", "prob": 0.2265, "ev": 3.7833, "odds": 16.7, "hit": 0, "payout": 0.0}, {"date": "20260117", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.2153, "ev": 3.6385, "odds": 16.9, "hit": 0, "payout": 0.0}, {"date": "20260117", "venue": "中山", "vg": "中山", "R": 4, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "9", "prob": 0.2, "ev": 7.2591, "odds": 36.3, "hit": 0, "payout": 0.0}, {"date": "20260117", "venue": "京都", "vg": "京都", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "14", "prob": 0.089, "ev": 4.2172, "odds": 47.4, "hit": 0, "payout": 0.0}, {"date": "20260117", "venue": "京都", "vg": "京都", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "4", "prob": 0.2891, "ev": 5.6383, "odds": 19.5, "hit": 0, "payout": 0.0}, {"date": "20260118", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "8", "prob": 0.2054, "ev": 10.3101, "odds": 50.2, "hit": 0, "payout": 0.0}, {"date": "20260118", "venue": "京都", "vg": "京都", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "17", "prob": 0.0857, "ev": 3.5051, "odds": 40.9, "hit": 0, "payout": 0.0}, {"date": "20260118", "venue": "京都", "vg": "京都", "R": 4, "race": "3歳1勝クラス", "type": "単勝", "combo": "3", "prob": 0.1678, "ev": 3.4403, "odds": 20.5, "hit": 0, "payout": 0.0}, {"date": "20260118", "venue": "京都", "vg": "京都", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.2601, "ev": 4.7589, "odds": 18.3, "hit": 0, "payout": 0.0}, {"date": "20260118", "venue": "中山", "vg": "中山", "R": 10, "race": "ジャニュアリーS", "type": "単勝", "combo": "13", "prob": 0.2262, "ev": 4.1401, "odds": 18.3, "hit": 0, "payout": 0.0}, {"date": "20260124", "venue": "中山", "vg": "中山", "R": 9, "race": "東雲賞", "type": "単勝", "combo": "1", "prob": 0.221, "ev": 4.8841, "odds": 22.1, "hit": 0, "payout": 0.0}, {"date": "20260124", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.2415, "ev": 10.9636, "odds": 45.4, "hit": 0, "payout": 0.0}, {"date": "20260124", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳新馬", "type": "単勝", "combo": "9", "prob": 0.0912, "ev": 4.688, "odds": 51.4, "hit": 0, "payout": 0.0}, {"date": "20260124", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.0846, "ev": 3.7238, "odds": 44.0, "hit": 0, "payout": 0.0}, {"date": "20260124", "venue": "小倉", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "10", "prob": 0.2132, "ev": 4.6269, "odds": 21.7, "hit": 0, "payout": 0.0}, {"date": "20260125", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.3186, "ev": 6.0219, "odds": 18.9, "hit": 0, "payout": 0.0}, {"date": "20260125", "venue": "小倉", "vg": "他", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "14", "prob": 0.2092, "ev": 3.8915, "odds": 18.6, "hit": 0, "payout": 0.0}, {"date": "20260125", "venue": "小倉", "vg": "他", "R": 4, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "2", "prob": 0.1843, "ev": 4.6249, "odds": 25.1, "hit": 0, "payout": 0.0}, {"date": "20260125", "venue": "京都", "vg": "京都", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "14", "prob": 0.0896, "ev": 4.4886, "odds": 50.1, "hit": 0, "payout": 0.0}, {"date": "20260125", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "9", "prob": 0.0793, "ev": 4.6523, "odds": 58.7, "hit": 0, "payout": 0.0}, {"date": "20260131", "venue": "京都", "vg": "京都", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2338, "ev": 6.4771, "odds": 27.7, "hit": 0, "payout": 0.0}, {"date": "20260131", "venue": "東京", "vg": "東京", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "1", "prob": 0.087, "ev": 4.9082, "odds": 56.4, "hit": 0, "payout": 0.0}, {"date": "20260131", "venue": "小倉", "vg": "他", "R": 5, "race": "4歳以上障害未勝利", "type": "単勝", "combo": "4", "prob": 0.2468, "ev": 7.1572, "odds": 29.0, "hit": 0, "payout": 0.0}, {"date": "20260131", "venue": "小倉", "vg": "他", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "5", "prob": 0.2023, "ev": 10.7014, "odds": 52.9, "hit": 0, "payout": 0.0}, {"date": "20260201", "venue": "小倉", "vg": "他", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "11", "prob": 0.0905, "ev": 4.9662, "odds": 54.9, "hit": 0, "payout": 0.0}, {"date": "20260201", "venue": "東京", "vg": "東京", "R": 10, "race": "節分S", "type": "単勝", "combo": "12", "prob": 0.1477, "ev": 6.9547, "odds": 47.1, "hit": 0, "payout": 0.0}, {"date": "20260201", "venue": "小倉", "vg": "他", "R": 9, "race": "足立山特別", "type": "単勝", "combo": "6", "prob": 0.3177, "ev": 7.3702, "odds": 23.2, "hit": 0, "payout": 0.0}, {"date": "20260207", "venue": "東京", "vg": "東京", "R": 4, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "6", "prob": 0.1948, "ev": 4.2082, "odds": 21.6, "hit": 0, "payout": 0.0}, {"date": "20260210", "venue": "京都", "vg": "京都", "R": 5, "race": "3歳新馬", "type": "単勝", "combo": "10", "prob": 0.0862, "ev": 4.5017, "odds": 52.2, "hit": 0, "payout": 0.0}, {"date": "20260210", "venue": "京都", "vg": "京都", "R": 3, "race": "3歳未勝利", "type": "単勝", "combo": "2", "prob": 0.2543, "ev": 3.7631, "odds": 14.8, "hit": 0, "payout": 0.0}, {"date": "20260210", "venue": "東京", "vg": "東京", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "13", "prob": 0.083, "ev": 4.0427, "odds": 48.7, "hit": 0, "payout": 0.0}, {"date": "20260214", "venue": "小倉", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.1815, "ev": 5.0107, "odds": 27.6, "hit": 0, "payout": 0.0}, {"date": "20260214", "venue": "東京", "vg": "東京", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "16", "prob": 0.0865, "ev": 5.0581, "odds": 58.5, "hit": 0, "payout": 0.0}, {"date": "20260214", "venue": "東京", "vg": "東京", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "14", "prob": 0.1548, "ev": 3.4827, "odds": 22.5, "hit": 0, "payout": 0.0}, {"date": "20260215", "venue": "京都", "vg": "京都", "R": 2, "race": "3歳新馬", "type": "単勝", "combo": "8", "prob": 0.104, "ev": 3.3909, "odds": 32.6, "hit": 0, "payout": 0.0}, {"date": "20260215", "venue": "京都", "vg": "京都", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "6", "prob": 0.206, "ev": 4.8817, "odds": 23.7, "hit": 0, "payout": 0.0}, {"date": "20260215", "venue": "小倉", "vg": "他", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "15", "prob": 0.4197, "ev": 4.9949, "odds": 11.9, "hit": 0, "payout": 0.0}, {"date": "20260221", "venue": "小倉", "vg": "他", "R": 5, "race": "4歳以上障害OP", "type": "単勝", "combo": "3", "prob": 0.2733, "ev": 15.1429, "odds": 55.4, "hit": 0, "payout": 0.0}, {"date": "20260221", "venue": "阪神", "vg": "阪神", "R": 9, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.2222, "ev": 3.733, "odds": 16.8, "hit": 0, "payout": 0.0}, {"date": "20260222", "venue": "東京", "vg": "東京", "R": 10, "race": "ジャパンC2025ベストレース受賞記念", "type": "単勝", "combo": "11", "prob": 0.1988, "ev": 4.7914, "odds": 24.1, "hit": 0, "payout": 0.0}, {"date": "20260222", "venue": "阪神", "vg": "阪神", "R": 11, "race": "令月S", "type": "単勝", "combo": "5", "prob": 0.3889, "ev": 3.6946, "odds": 9.5, "hit": 0, "payout": 0.0}, {"date": "20260222", "venue": "阪神", "vg": "阪神", "R": 4, "race": "3歳新馬", "type": "単勝", "combo": "11", "prob": 0.0989, "ev": 3.7581, "odds": 38.0, "hit": 0, "payout": 0.0}, {"date": "20260222", "venue": "東京", "vg": "東京", "R": 11, "race": "フェブラリーS", "type": "単勝", "combo": "13", "prob": 0.2148, "ev": 4.5962, "odds": 21.4, "hit": 0, "payout": 0.0}, {"date": "20260228", "venue": "小倉", "vg": "他", "R": 7, "race": "3歳1勝クラス", "type": "単勝", "combo": "12", "prob": 0.1227, "ev": 4.9203, "odds": 40.1, "hit": 0, "payout": 0.0}, {"date": "20260228", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "6", "prob": 0.1899, "ev": 6.9129, "odds": 36.4, "hit": 0, "payout": 0.0}, {"date": "20260228", "venue": "小倉", "vg": "他", "R": 5, "race": "4歳以上障害OP", "type": "単勝", "combo": "10", "prob": 0.2133, "ev": 5.6306, "odds": 26.4, "hit": 0, "payout": 0.0}, {"date": "20260301", "venue": "阪神", "vg": "阪神", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2388, "ev": 8.4757, "odds": 35.5, "hit": 0, "payout": 0.0}, {"date": "20260307", "venue": "中山", "vg": "中山", "R": 12, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "16", "prob": 0.2032, "ev": 3.638, "odds": 17.9, "hit": 0, "payout": 0.0}, {"date": "20260307", "venue": "阪神", "vg": "阪神", "R": 8, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "4", "prob": 0.1725, "ev": 3.4664, "odds": 20.1, "hit": 0, "payout": 0.0}, {"date": "20260308", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "13", "prob": 0.2479, "ev": 5.901, "odds": 23.8, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "阪神", "vg": "阪神", "R": 8, "race": "阪神スプリングジャンプ", "type": "複勝", "combo": "1", "prob": 0.1781, "ev": 8.6747, "odds": 48.7, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "阪神", "vg": "阪神", "R": 11, "race": "コーラルS", "type": "単勝", "combo": "10", "prob": 0.1999, "ev": 3.399, "odds": 17.0, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "阪神", "vg": "阪神", "R": 10, "race": "難波S", "type": "単勝", "combo": "2", "prob": 0.1787, "ev": 5.648, "odds": 31.6, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "阪神", "vg": "阪神", "R": 9, "race": "讃岐特別", "type": "複勝", "combo": "10", "prob": 0.1938, "ev": 4.7204, "odds": 24.4, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "中京", "vg": "他", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "6-8", "prob": 0.108, "ev": 4.8828, "odds": 45.2, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "11-5", "prob": 0.1463, "ev": 3.7154, "odds": 25.4, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "中京", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "14", "prob": 0.1379, "ev": 3.4975, "odds": 25.4, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "中京", "vg": "他", "R": 11, "race": "中京スポーツ杯", "type": "複勝", "combo": "4", "prob": 0.1263, "ev": 7.8473, "odds": 62.1, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "阪神", "vg": "阪神", "R": 9, "race": "讃岐特別", "type": "単勝", "combo": "10", "prob": 0.1938, "ev": 7.0939, "odds": 36.6, "hit": 0, "payout": 0.0}, {"date": "20260314", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "6", "prob": 0.1191, "ev": 8.2546, "odds": 69.3, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "中京", "vg": "他", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "3-9", "prob": 0.137, "ev": 4.9584, "odds": 36.2, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "中京", "vg": "他", "R": 2, "race": "3歳未勝利", "type": "馬単", "combo": "13-7", "prob": 0.0754, "ev": 4.2894, "odds": 56.9, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "中山", "vg": "中山", "R": 6, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "1", "prob": 0.1057, "ev": 4.1136, "odds": 38.9, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "複勝", "combo": "13", "prob": 0.0603, "ev": 13.3222, "odds": 221.0, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳未勝利", "type": "複勝", "combo": "11", "prob": 0.0747, "ev": 3.4123, "odds": 45.7, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上2勝クラス", "type": "複勝", "combo": "3", "prob": 0.1226, "ev": 9.0515, "odds": 73.8, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 8, "race": "4歳以上2勝クラス", "type": "単勝", "combo": "2", "prob": 0.1724, "ev": 5.5355, "odds": 32.1, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "4-3", "prob": 0.0869, "ev": 3.5359, "odds": 40.7, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 6, "race": "3歳1勝クラス", "type": "馬単", "combo": "4-6", "prob": 0.2405, "ev": 3.3906, "odds": 14.1, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 4, "race": "4歳以上障害未勝利", "type": "複勝", "combo": "6", "prob": 0.1089, "ev": 7.9275, "odds": 72.8, "hit": 0, "payout": 0.0}, {"date": "20260315", "venue": "阪神", "vg": "阪神", "R": 3, "race": "3歳未勝利", "type": "単勝", "combo": "11", "prob": 0.2139, "ev": 4.748, "odds": 22.2, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳未勝利", "type": "馬単", "combo": "12-4", "prob": 0.0664, "ev": 3.7938, "odds": 57.1, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "阪神", "vg": "阪神", "R": 9, "race": "淡路特別", "type": "複勝", "combo": "7", "prob": 0.1616, "ev": 3.8348, "odds": 23.7, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "10", "prob": 0.2301, "ev": 4.9066, "odds": 21.3, "hit": 1, "payout": 4650.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 2, "race": "3歳未勝利", "type": "馬単", "combo": "6-9", "prob": 0.1073, "ev": 6.5695, "odds": 61.2, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "複勝", "combo": "4", "prob": 0.0853, "ev": 9.2961, "odds": 109.0, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "単勝", "combo": "1", "prob": 0.2315, "ev": 6.2035, "odds": 26.8, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "阪神", "vg": "阪神", "R": 4, "race": "3歳未勝利", "type": "単勝", "combo": "10", "prob": 0.4195, "ev": 5.9154, "odds": 14.1, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "阪神", "vg": "阪神", "R": 12, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "5", "prob": 0.1249, "ev": 6.8882, "odds": 55.1, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中京", "vg": "他", "R": 10, "race": "豊明S", "type": "複勝", "combo": "12", "prob": 0.1081, "ev": 11.4577, "odds": 106.0, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "1-6", "prob": 0.1203, "ev": 3.766, "odds": 31.3, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "6-1", "prob": 0.1013, "ev": 5.4515, "odds": 53.8, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "6", "prob": 0.1133, "ev": 6.9834, "odds": 61.6, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 7, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "3", "prob": 0.1133, "ev": 6.5906, "odds": 58.1, "hit": 1, "payout": 1680.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 8, "race": "ペガサスJS", "type": "単勝", "combo": "4", "prob": 0.3353, "ev": 7.7799, "odds": 23.2, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中京", "vg": "他", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "2", "prob": 0.1973, "ev": 3.5309, "odds": 17.9, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中山", "vg": "中山", "R": 3, "race": "3歳未勝利", "type": "複勝", "combo": "9", "prob": 0.1047, "ev": 5.4098, "odds": 51.6, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "16-6", "prob": 0.1787, "ev": 6.2908, "odds": 35.2, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中京", "vg": "他", "R": 6, "race": "3歳未勝利", "type": "馬単", "combo": "4-1", "prob": 0.0945, "ev": 4.3164, "odds": 45.7, "hit": 0, "payout": 0.0}, {"date": "20260321", "venue": "中京", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "11", "prob": 0.1401, "ev": 6.0957, "odds": 43.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "12", "prob": 0.2227, "ev": 5.2341, "odds": 23.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 6, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "3", "prob": 0.1203, "ev": 3.4294, "odds": 28.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 7, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "prob": 0.2119, "ev": 4.3236, "odds": 20.4, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 8, "race": "4歳以上1勝クラス", "type": "複勝", "combo": "11", "prob": 0.1177, "ev": 6.9817, "odds": 59.3, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 9, "race": "フローラルウォーク賞", "type": "複勝", "combo": "5", "prob": 0.1576, "ev": 4.4907, "odds": 28.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 10, "race": "弥富特別", "type": "複勝", "combo": "1", "prob": 0.145, "ev": 6.0713, "odds": 41.9, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 8, "race": "4歳以上1勝クラス", "type": "単勝", "combo": "10", "prob": 0.3115, "ev": 3.8316, "odds": 12.3, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "2-8", "prob": 0.1379, "ev": 5.3105, "odds": 38.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "2-3", "prob": 0.1937, "ev": 5.6171, "odds": 29.0, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "複勝", "combo": "6", "prob": 0.0718, "ev": 4.4582, "odds": 62.1, "hit": 1, "payout": 360.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 5, "race": "3歳未勝利", "type": "単勝", "combo": "13", "prob": 0.4762, "ev": 4.4283, "odds": 9.3, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "馬単", "combo": "13-4", "prob": 0.1282, "ev": 6.8567, "odds": 53.5, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 1, "race": "3歳未勝利", "type": "単勝", "combo": "13", "prob": 0.4156, "ev": 9.3091, "odds": 22.4, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中山", "vg": "中山", "R": 7, "race": "3歳1勝クラス", "type": "馬単", "combo": "3-2", "prob": 0.1034, "ev": 6.1219, "odds": 59.2, "hit": 0, "payout": 0.0}, {"date": "20260322", "venue": "中京", "vg": "他", "R": 4, "race": "3歳未勝利", "type": "馬単", "combo": "3-1", "prob": 0.0957, "ev": 3.4276, "odds": 35.8, "hit": 0, "payout": 0.0}];
-const TYPE_TAG = {"単勝":"tag-win","複勝":"tag-place","馬連":"tag-q","ワイド":"tag-w","馬単":"tag-e"};
+    function calcKelly(prob, odds, budget, kf) {
+      if (odds <= 1 || prob <= 0) return 0;
+      const b = odds - 1;
+      const fs = (prob * odds - 1) / b;
+      if (fs <= 0) return 0;
+      const f = Math.min(fs * kf, 0.2);
+      const amt = Math.floor(budget * f / 100) * 100;
+      return amt >= 100 ? amt : 0;
+    }
 
-function calcKelly(prob, odds, budget, kf) {
-  if (odds <= 1 || prob <= 0) return 0;
-  const b = odds - 1;
-  const fs = (prob * odds - 1) / b;
-  if (fs <= 0) return 0;
-  const f = Math.min(fs * kf, 0.2);
-  const amt = Math.floor(budget * f / 100) * 100;
-  return amt >= 100 ? amt : 0;
-}
+    function getChecked(id) {
+      return [...document.querySelectorAll(`#${id} input:checked`)].map(e => e.value);
+    }
 
-function getChecked(id) {
-  return [...document.querySelectorAll(`#${id} input:checked`)].map(e => e.value);
-}
+    function updateAll() {
+      const budget = parseFloat(document.getElementById('budget').value) || 10000;
+      const kelly = parseFloat(document.getElementById('kelly').value);
+      const minEv = parseFloat(document.getElementById('min-ev').value);
+      const minOdds = parseFloat(document.getElementById('min-odds').value);
+      const types = getChecked('type-filters');
+      const venues = getChecked('venue-filters');
 
-function updateAll() {
-  const budget  = parseFloat(document.getElementById('budget').value) || 10000;
-  const kelly   = parseFloat(document.getElementById('kelly').value);
-  const minEv   = parseFloat(document.getElementById('min-ev').value);
-  const minOdds = parseFloat(document.getElementById('min-odds').value);
-  const types   = getChecked('type-filters');
-  const venues  = getChecked('venue-filters');
+      const filtered = RAW
+        .filter(b => b.ev >= minEv && b.odds >= minOdds && types.includes(b.type) && venues.includes(b.vg))
+        .map(b => ({ ...b, invest: calcKelly(b.prob, b.odds, budget, kelly) }))
+        .filter(b => b.invest > 0);
 
-  const filtered = RAW
-    .filter(b => b.ev >= minEv && b.odds >= minOdds && types.includes(b.type) && venues.includes(b.vg))
-    .map(b => ({...b, invest: calcKelly(b.prob, b.odds, budget, kelly)}))
-    .filter(b => b.invest > 0);
+      // KPI
+      const totalInv = filtered.reduce((s, b) => s + b.invest, 0);
+      const totalPay = filtered.reduce((s, b) => s + (b.hit ? b.payout : 0), 0);
+      const hits = filtered.filter(b => b.hit).length;
+      const pnl = totalPay - totalInv;
+      const rr = totalInv > 0 ? totalPay / totalInv * 100 : 0;
+      const hr = filtered.length > 0 ? hits / filtered.length * 100 : 0;
 
-  // KPI
-  const totalInv = filtered.reduce((s, b) => s + b.invest, 0);
-  const totalPay = filtered.reduce((s, b) => s + (b.hit ? b.payout : 0), 0);
-  const hits     = filtered.filter(b => b.hit).length;
-  const pnl      = totalPay - totalInv;
-  const rr       = totalInv > 0 ? totalPay / totalInv * 100 : 0;
-  const hr       = filtered.length > 0 ? hits / filtered.length * 100 : 0;
+      document.getElementById('kpi-rr').textContent = rr.toFixed(1) + '%';
+      document.getElementById('kpi-rr').className = 'kpi-value ' + (rr >= 100 ? 'green' : 'red');
+      document.getElementById('kpi-profit').textContent = (pnl >= 0 ? '+' : '') + pnl.toLocaleString() + '円';
+      document.getElementById('kpi-profit').className = 'kpi-value ' + (pnl >= 0 ? 'green' : 'red');
+      document.getElementById('kpi-hr').textContent = hr.toFixed(1) + '%';
+      document.getElementById('kpi-bets').textContent = filtered.length + '件';
+      document.getElementById('kpi-inv').textContent = totalInv.toLocaleString() + '円';
+      document.getElementById('kpi-pay').textContent = totalPay.toLocaleString() + '円';
 
-  document.getElementById('kpi-rr').textContent     = rr.toFixed(1) + '%';
-  document.getElementById('kpi-rr').className       = 'kpi-value ' + (rr >= 100 ? 'green' : 'red');
-  document.getElementById('kpi-profit').textContent = (pnl >= 0 ? '+' : '') + pnl.toLocaleString() + '円';
-  document.getElementById('kpi-profit').className   = 'kpi-value ' + (pnl >= 0 ? 'green' : 'red');
-  document.getElementById('kpi-hr').textContent     = hr.toFixed(1) + '%';
-  document.getElementById('kpi-bets').textContent   = filtered.length + '件';
-  document.getElementById('kpi-inv').textContent    = totalInv.toLocaleString() + '円';
-  document.getElementById('kpi-pay').textContent    = totalPay.toLocaleString() + '円';
+      // Daily aggregation
+      const byDate = {};
+      for (const b of filtered) {
+        if (!byDate[b.date]) byDate[b.date] = { inv: 0, pay: 0 };
+        byDate[b.date].inv += b.invest;
+        byDate[b.date].pay += b.hit ? b.payout : 0;
+      }
+      const dates = Object.keys(byDate).sort();
+      const invArr = dates.map(d => byDate[d].inv);
+      const payArr = dates.map(d => byDate[d].pay);
+      const labels = dates.map(d => `${d.slice(0, 4)}/${d.slice(4, 6)}/${d.slice(6)}`);
 
-  // Daily aggregation
-  const byDate = {};
-  for (const b of filtered) {
-    if (!byDate[b.date]) byDate[b.date] = {inv: 0, pay: 0};
-    byDate[b.date].inv += b.invest;
-    byDate[b.date].pay += b.hit ? b.payout : 0;
-  }
-  const dates  = Object.keys(byDate).sort();
-  const invArr = dates.map(d => byDate[d].inv);
-  const payArr = dates.map(d => byDate[d].pay);
-  const labels = dates.map(d => `${d.slice(0,4)}/${d.slice(4,6)}/${d.slice(6)}`);
+      // Cumulative P&L
+      let cumPnl = 0;
+      const cumArr = dates.map((d, i) => { cumPnl += payArr[i] - invArr[i]; return cumPnl; });
 
-  // Cumulative P&L
-  let cumPnl = 0;
-  const cumArr = dates.map((d, i) => { cumPnl += payArr[i] - invArr[i]; return cumPnl; });
+      // Max Drawdown
+      let peak = 0;
+      const ddArr = cumArr.map(v => { if (v > peak) peak = v; return peak > 0 ? (v - peak) / peak * 100 : 0; });
 
-  // Max Drawdown
-  let peak = 0;
-  const ddArr = cumArr.map(v => { if (v > peak) peak = v; return peak > 0 ? (v - peak) / peak * 100 : 0; });
+      // Rolling 30-day ROI
+      const rollingRoi = dates.map((d, i) => {
+        let wInv = 0, wPay = 0;
+        for (let j = Math.max(0, i - 29); j <= i; j++) { wInv += invArr[j]; wPay += payArr[j]; }
+        return wInv > 0 ? wPay / wInv * 100 : null;
+      });
 
-  // Rolling 30-day ROI
-  const rollingRoi = dates.map((d, i) => {
-    let wInv = 0, wPay = 0;
-    for (let j = Math.max(0, i - 29); j <= i; j++) { wInv += invArr[j]; wPay += payArr[j]; }
-    return wInv > 0 ? wPay / wInv * 100 : null;
-  });
+      // Monthly P&L
+      const monthMap = {};
+      for (const b of filtered) {
+        const m = b.date.slice(0, 6);
+        if (!monthMap[m]) monthMap[m] = { inv: 0, pay: 0 };
+        monthMap[m].inv += b.invest;
+        monthMap[m].pay += b.hit ? b.payout : 0;
+      }
+      const months = Object.keys(monthMap).sort();
+      const monthLabels = months.map(m => m.slice(0, 4) + '/' + m.slice(4, 6));
+      const monthPnl = months.map(m => monthMap[m].pay - monthMap[m].inv);
 
-  // Monthly P&L
-  const monthMap = {};
-  for (const b of filtered) {
-    const m = b.date.slice(0, 6);
-    if (!monthMap[m]) monthMap[m] = {inv: 0, pay: 0};
-    monthMap[m].inv += b.invest;
-    monthMap[m].pay += b.hit ? b.payout : 0;
-  }
-  const months      = Object.keys(monthMap).sort();
-  const monthLabels = months.map(m => m.slice(0,4) + '/' + m.slice(4,6));
-  const monthPnl    = months.map(m => monthMap[m].pay - monthMap[m].inv);
+      // Type stats
+      const typeMap = {};
+      for (const b of filtered) {
+        if (!typeMap[b.type]) typeMap[b.type] = { inv: 0, pay: 0 };
+        typeMap[b.type].inv += b.invest;
+        typeMap[b.type].pay += b.hit ? b.payout : 0;
+      }
+      const typeKeys = Object.keys(typeMap);
+      const typeRR = typeKeys.map(t => typeMap[t].inv > 0 ? typeMap[t].pay / typeMap[t].inv * 100 : 0);
 
-  // Type stats
-  const typeMap = {};
-  for (const b of filtered) {
-    if (!typeMap[b.type]) typeMap[b.type] = {inv: 0, pay: 0};
-    typeMap[b.type].inv += b.invest;
-    typeMap[b.type].pay += b.hit ? b.payout : 0;
-  }
-  const typeKeys = Object.keys(typeMap);
-  const typeRR   = typeKeys.map(t => typeMap[t].inv > 0 ? typeMap[t].pay / typeMap[t].inv * 100 : 0);
+      // EV band stats
+      const evBands = [
+        { min: 1, max: 2, label: '1〜2' }, { min: 2, max: 3, label: '2〜3' },
+        { min: 3, max: 5, label: '3〜5' }, { min: 5, max: 10, label: '5〜10' }, { min: 10, max: Infinity, label: '10+' }
+      ];
+      const evLabels = evBands.map(b => b.label);
+      const evRR = evBands.map(band => {
+        const bets = filtered.filter(b => b.ev >= band.min && b.ev < band.max);
+        const inv = bets.reduce((s, b) => s + b.invest, 0);
+        const pay = bets.reduce((s, b) => s + (b.hit ? b.payout : 0), 0);
+        return inv > 0 ? pay / inv * 100 : null;
+      });
 
-  // EV band stats
-  const evBands = [
-    {min:1,max:2,label:'1〜2'}, {min:2,max:3,label:'2〜3'},
-    {min:3,max:5,label:'3〜5'}, {min:5,max:10,label:'5〜10'}, {min:10,max:Infinity,label:'10+'}
-  ];
-  const evLabels = evBands.map(b => b.label);
-  const evRR = evBands.map(band => {
-    const bets = filtered.filter(b => b.ev >= band.min && b.ev < band.max);
-    const inv  = bets.reduce((s, b) => s + b.invest, 0);
-    const pay  = bets.reduce((s, b) => s + (b.hit ? b.payout : 0), 0);
-    return inv > 0 ? pay / inv * 100 : null;
-  });
+      // Calibration: predicted prob vs actual hit rate
+      const calibBands = [
+        { min: 0, max: 0.05, label: '0-5%' }, { min: 0.05, max: 0.10, label: '5-10%' },
+        { min: 0.10, max: 0.15, label: '10-15%' }, { min: 0.15, max: 0.20, label: '15-20%' },
+        { min: 0.20, max: 0.30, label: '20-30%' }, { min: 0.30, max: 0.50, label: '30-50%' },
+        { min: 0.50, max: 1.0, label: '50%+' }
+      ];
+      const calibLabels = calibBands.map(b => b.label);
+      const calibPred = calibBands.map(band => {
+        const bets = filtered.filter(b => b.prob >= band.min && b.prob < band.max);
+        return bets.length > 0 ? bets.reduce((s, b) => s + b.prob, 0) / bets.length * 100 : null;
+      });
+      const calibActual = calibBands.map(band => {
+        const bets = filtered.filter(b => b.prob >= band.min && b.prob < band.max);
+        return bets.length > 0 ? bets.filter(b => b.hit).length / bets.length * 100 : null;
+      });
 
-  // Calibration: predicted prob vs actual hit rate
-  const calibBands = [
-    {min:0,max:0.05,label:'0-5%'}, {min:0.05,max:0.10,label:'5-10%'},
-    {min:0.10,max:0.15,label:'10-15%'}, {min:0.15,max:0.20,label:'15-20%'},
-    {min:0.20,max:0.30,label:'20-30%'}, {min:0.30,max:0.50,label:'30-50%'},
-    {min:0.50,max:1.0,label:'50%+'}
-  ];
-  const calibLabels = calibBands.map(b => b.label);
-  const calibPred = calibBands.map(band => {
-    const bets = filtered.filter(b => b.prob >= band.min && b.prob < band.max);
-    return bets.length > 0 ? bets.reduce((s, b) => s + b.prob, 0) / bets.length * 100 : null;
-  });
-  const calibActual = calibBands.map(band => {
-    const bets = filtered.filter(b => b.prob >= band.min && b.prob < band.max);
-    return bets.length > 0 ? bets.filter(b => b.hit).length / bets.length * 100 : null;
-  });
+      // === Chart updates ===
+      updateChart('pnlChart', 'chart-pnl', labels, [{
+        label: '累積損益', data: cumArr,
+        borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
+        fill: true, tension: 0.3, pointRadius: 3,
+      }], 'line', { y: { ticks: { callback: v => v.toLocaleString() + '円' } } });
 
-  // === Chart updates ===
-  updateChart('pnlChart', 'chart-pnl', labels, [{
-    label: '累積損益', data: cumArr,
-    borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
-    fill: true, tension: 0.3, pointRadius: 3,
-  }], 'line', {y: {ticks: {callback: v => v.toLocaleString() + '円'}}});
+      updateChart('rollingChart', 'chart-rolling', labels, [
+        {
+          label: '30日ローリング回収率(%)', data: rollingRoi,
+          borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)',
+          fill: true, tension: 0.3, pointRadius: 2, spanGaps: true,
+        },
+        {
+          label: '損益分岐(100%)', data: labels.map(() => 100),
+          borderColor: '#ef4444', borderDash: [4, 4], borderWidth: 1.5,
+          pointRadius: 0, fill: false,
+        },
+      ], 'line', { y: { ticks: { callback: v => v.toFixed(0) + '%' } } });
 
-  updateChart('rollingChart', 'chart-rolling', labels, [
-    {
-      label: '30日ローリング回収率(%)', data: rollingRoi,
-      borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)',
-      fill: true, tension: 0.3, pointRadius: 2, spanGaps: true,
-    },
-    {
-      label: '損益分岐(100%)', data: labels.map(() => 100),
-      borderColor: '#ef4444', borderDash: [4, 4], borderWidth: 1.5,
-      pointRadius: 0, fill: false,
-    },
-  ], 'line', {y: {ticks: {callback: v => v.toFixed(0) + '%'}}});
+      updateChart('ddChart', 'chart-dd', labels, [{
+        label: 'ドローダウン(%)', data: ddArr,
+        borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.15)',
+        fill: true, tension: 0.3, pointRadius: 2,
+      }], 'line', { y: { ticks: { callback: v => v.toFixed(1) + '%' } } });
 
-  updateChart('ddChart', 'chart-dd', labels, [{
-    label: 'ドローダウン(%)', data: ddArr,
-    borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.15)',
-    fill: true, tension: 0.3, pointRadius: 2,
-  }], 'line', {y: {ticks: {callback: v => v.toFixed(1) + '%'}}});
+      updateChart('monthlyChart', 'chart-monthly', monthLabels, [{
+        label: '月別純収支', data: monthPnl,
+        backgroundColor: monthPnl.map(v => v >= 0 ? '#22c55e80' : '#ef444480'),
+        borderColor: monthPnl.map(v => v >= 0 ? '#22c55e' : '#ef4444'),
+        borderWidth: 1,
+      }], 'bar', { y: { ticks: { callback: v => v.toLocaleString() + '円' } } });
 
-  updateChart('monthlyChart', 'chart-monthly', monthLabels, [{
-    label: '月別純収支', data: monthPnl,
-    backgroundColor: monthPnl.map(v => v >= 0 ? '#22c55e80' : '#ef444480'),
-    borderColor: monthPnl.map(v => v >= 0 ? '#22c55e' : '#ef4444'),
-    borderWidth: 1,
-  }], 'bar', {y: {ticks: {callback: v => v.toLocaleString() + '円'}}});
+      updateChart('typeChart', 'chart-type', typeKeys, [{
+        label: '回収率(%)', data: typeRR,
+        backgroundColor: typeRR.map(v => v >= 100 ? '#22c55e80' : '#ef444480'),
+        borderColor: typeRR.map(v => v >= 100 ? '#22c55e' : '#ef4444'),
+        borderWidth: 1,
+      }], 'bar', { y: { ticks: { callback: v => v.toFixed(0) + '%' } } }, { indexAxis: 'y' });
 
-  updateChart('typeChart', 'chart-type', typeKeys, [{
-    label: '回収率(%)', data: typeRR,
-    backgroundColor: typeRR.map(v => v >= 100 ? '#22c55e80' : '#ef444480'),
-    borderColor: typeRR.map(v => v >= 100 ? '#22c55e' : '#ef4444'),
-    borderWidth: 1,
-  }], 'bar', {y: {ticks: {callback: v => v.toFixed(0) + '%'}}}, {indexAxis: 'y'});
+      updateChart('evChart', 'chart-ev', evLabels, [{
+        label: '回収率(%)', data: evRR,
+        backgroundColor: evRR.map(v => v == null ? '#33415580' : v >= 100 ? '#22c55e80' : '#ef444480'),
+        borderColor: evRR.map(v => v == null ? '#334155' : v >= 100 ? '#22c55e' : '#ef4444'),
+        borderWidth: 1,
+      }], 'bar', { y: { ticks: { callback: v => v != null ? v.toFixed(0) + '%' : '' } } });
 
-  updateChart('evChart', 'chart-ev', evLabels, [{
-    label: '回収率(%)', data: evRR,
-    backgroundColor: evRR.map(v => v == null ? '#33415580' : v >= 100 ? '#22c55e80' : '#ef444480'),
-    borderColor: evRR.map(v => v == null ? '#334155' : v >= 100 ? '#22c55e' : '#ef4444'),
-    borderWidth: 1,
-  }], 'bar', {y: {ticks: {callback: v => v != null ? v.toFixed(0) + '%' : ''}}});
+      updateChart('calibChart', 'chart-calib', calibLabels, [
+        { label: '予測確率(%)', data: calibPred, backgroundColor: '#3b82f680', borderColor: '#3b82f6', borderWidth: 1 },
+        { label: '実的中率(%)', data: calibActual, backgroundColor: '#22c55e80', borderColor: '#22c55e', borderWidth: 1 },
+      ], 'bar', { y: { ticks: { callback: v => v != null ? v.toFixed(0) + '%' : '' } } });
 
-  updateChart('calibChart', 'chart-calib', calibLabels, [
-    {label: '予測確率(%)', data: calibPred, backgroundColor: '#3b82f680', borderColor: '#3b82f6', borderWidth: 1},
-    {label: '実的中率(%)', data: calibActual, backgroundColor: '#22c55e80', borderColor: '#22c55e', borderWidth: 1},
-  ], 'bar', {y: {ticks: {callback: v => v != null ? v.toFixed(0) + '%' : ''}}});
+      // Stats row
+      const typeCount = {};
+      for (const b of filtered) typeCount[b.type] = (typeCount[b.type] || 0) + 1;
+      document.getElementById('stats-row').innerHTML =
+        `<span>表示: <b>${filtered.length}件</b></span>` +
+        `<span>的中: <b>${hits}件</b></span>` +
+        Object.entries(typeCount).map(([t, c]) => `<span>${t}: <b>${c}</b></span>`).join('');
 
-  // Stats row
-  const typeCount = {};
-  for (const b of filtered) typeCount[b.type] = (typeCount[b.type] || 0) + 1;
-  document.getElementById('stats-row').innerHTML =
-    `<span>表示: <b>${filtered.length}件</b></span>` +
-    `<span>的中: <b>${hits}件</b></span>` +
-    Object.entries(typeCount).map(([t, c]) => `<span>${t}: <b>${c}</b></span>`).join('');
-
-  // Table (with running P&L: -invest each bet, +payout on hit)
-  const tbody = document.getElementById('bet-tbody');
-  let runPnl = 0;
-  tbody.innerHTML = filtered.slice(0, 500).map(b => {
-    runPnl -= b.invest;
-    if (b.hit) runPnl += b.payout;
-    const pnlColor = runPnl >= 0 ? '#22c55e' : '#ef4444';
-    const pnlText  = (runPnl >= 0 ? '+' : '') + runPnl.toLocaleString() + '円';
-    return `
+      // Table (with running P&L: -invest each bet, +payout on hit)
+      const tbody = document.getElementById('bet-tbody');
+      let runPnl = 0;
+      tbody.innerHTML = filtered.slice(0, 500).map(b => {
+        runPnl -= b.invest;
+        if (b.hit) runPnl += b.payout;
+        const pnlColor = runPnl >= 0 ? '#22c55e' : '#ef4444';
+        const pnlText = (runPnl >= 0 ? '+' : '') + runPnl.toLocaleString() + '円';
+        return `
     <tr>
-      <td>${b.date.slice(0,4)}/${b.date.slice(4,6)}/${b.date.slice(6)}</td>
+      <td>${b.date.slice(0, 4)}/${b.date.slice(4, 6)}/${b.date.slice(6)}</td>
       <td>${b.venue}</td>
       <td>${b.R}R</td>
       <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${b.race}</td>
-      <td><span class="tag ${TYPE_TAG[b.type]||''}">${b.type}</span></td>
+      <td><span class="tag ${TYPE_TAG[b.type] || ''}">${b.type}</span></td>
       <td style="font-family:monospace">${b.combo}</td>
       <td style="text-align:right">${b.odds.toFixed(1)}倍</td>
-      <td style="text-align:right;color:${b.ev>=4?'#22c55e':b.ev>=2?'#f59e0b':'#94a3b8'}">${b.ev.toFixed(2)}</td>
+      <td style="text-align:right;color:${b.ev >= 4 ? '#22c55e' : b.ev >= 2 ? '#f59e0b' : '#94a3b8'}">${b.ev.toFixed(2)}</td>
       <td style="text-align:right">${b.invest.toLocaleString()}円</td>
       <td style="text-align:right;color:${pnlColor};font-weight:600">${pnlText}</td>
-      <td class="${b.hit?'hit':'miss'}">${b.hit?'○ 的中':'× 外れ'}</td>
-      <td style="text-align:right;color:${b.hit?'#22c55e':'#475569'}">${b.hit?(b.payout.toLocaleString()+'円'):'-'}</td>
+      <td class="${b.hit ? 'hit' : 'miss'}">${b.hit ? '○ 的中' : '× 外れ'}</td>
+      <td style="text-align:right;color:${b.hit ? '#22c55e' : '#475569'}">${b.hit ? (b.payout.toLocaleString() + '円') : '-'}</td>
     </tr>`;
-  }).join('');
-}
+      }).join('');
+    }
 
-function updateChart(varName, canvasId, labels, datasets, type, scaleOpts, extraOpts={}) {
-  const ctx = document.getElementById(canvasId).getContext('2d');
-  if (window[varName]) window[varName].destroy();
-  window[varName] = new Chart(ctx, {
-    type,
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: true,
-      plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
-      scales: {
-        x: { ticks: { color: '#64748b', maxRotation: 45, font: { size: 10 } }, grid: { color: '#1e293b' } },
-        y: { ticks: { color: '#64748b', font: { size: 10 }, ...((scaleOpts?.y?.ticks)||{}) }, grid: { color: '#1e293b' }, ...((scaleOpts?.y)||{}) },
-      },
-      ...extraOpts,
-    },
-  });
-}
+    function updateChart(varName, canvasId, labels, datasets, type, scaleOpts, extraOpts = {}) {
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      if (window[varName]) window[varName].destroy();
+      window[varName] = new Chart(ctx, {
+        type,
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+          scales: {
+            x: { ticks: { color: '#64748b', maxRotation: 45, font: { size: 10 } }, grid: { color: '#1e293b' } },
+            y: { ticks: { color: '#64748b', font: { size: 10 }, ...((scaleOpts?.y?.ticks) || {}) }, grid: { color: '#1e293b' }, ...((scaleOpts?.y) || {}) },
+          },
+          ...extraOpts,
+        },
+      });
+    }
 
-updateAll();
-</script>
+    updateAll();
+  </script>
 </body>
+
 </html>
