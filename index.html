@@ -1,1 +1,125 @@
-aaaa
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>競馬予想インデックス</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+            color: #333;
+        }
+
+        .button-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: block;
+            background-color: #0044cc;
+            color: white;
+            text-decoration: none;
+            padding: 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            text-align: center;
+            transition: background-color 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #003399;
+        }
+
+        .btn-prediction {
+            background-color: #cc0000;
+        }
+
+        .btn-prediction:hover {
+            background-color: #aa0000;
+        }
+
+        .btn-disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            color: #777;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>競馬予想レポート</h1>
+
+        <div class="button-list">
+            <!-- 週末の予想 -->
+            <a href="reports/prediction_20260328.html" class="btn btn-prediction">
+                今週末の予想情報
+            </a>
+
+            <!-- 過去の結果 -->
+            <a href="reports/results_2026_01.html" class="btn">
+                2026/1～の結果
+            </a>
+            <a href="reports/results_2025_10.html" class="btn">
+                2025/10～12の結果
+            </a>
+            <a href="reports/results_2025_07.html" class="btn">
+                2025/7～9の結果
+            </a>
+            <a href="reports/results_2025_04.html" class="btn">
+                2025/4～6の結果
+            </a>
+            <a href="reports/results_2025_01.html" class="btn">
+                2025/1～3の結果
+            </a>
+            <a href="reports/results_2025_10.html" class="btn">
+                2025/10～12の結果
+            </a>
+            <a href="reports/results_2025_07.html" class="btn">
+                2025/7～9の結果
+            </a>
+            <a href="reports/results_2025_04.html" class="btn">
+                2025/4～6の結果
+            </a>
+            <a href="reports/results_2024_10.html" class="btn">
+                2024/10～12の結果
+            </a>
+            <a href="reports/results_2024_07.html" class="btn">
+                2024/7～9の結果
+            </a>
+            <a href="reports/results_2024_04.html" class="btn">
+                2024/4～6の結果
+            </a>
+            <a href="reports/results_2024_01.html" class="btn">
+                2024/1～3の結果
+            </a>
+        </div>
+    </div>
+
+</body>
+
+</html>
