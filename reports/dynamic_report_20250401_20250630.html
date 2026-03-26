@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>投資戦略分析レポート (Clean View)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+    <style>
+        :root { --primary: #2c3e50; --accent: #27ae60; --danger: #e74c3c; --bg: #f4f7f6; }
+        body { font-family: sans-serif; background: var(--bg); padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; }
+        .config-panel { background: #fff; padding: 20px; border-radius: 15px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 5px solid var(--primary); }
+        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-bottom: 30px; }
+        .card { background: #fff; padding: 15px; border-radius: 12px; text-align: center; border-bottom: 4px solid var(--primary); }
+        .charts-container { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .chart-box { background: #fff; padding: 20px; border-radius: 15px; position: relative; height: 400px; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; }
+        th { background: #34495e; color: #fff; padding: 12px; text-align: left; }
+        td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 0.85em; }
+        .status-win { background: #e8f6ef; color: var(--accent); font-weight: bold; }
+        input { width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align:center;">🏇 投資戦略分析シミュレーター</h1>
+        <p style="text-align:center;">期間: 20250401 ～ 20250630</p>
+        <div class="config-panel">
+            <div><label>初期運用資金:</label><input type="number" id="initCap" value="100000" oninput="runSim()"></div>
+            <div><label>ケリー係数: <span id="kellyVal">0.5</span></label><input type="range" id="kelly" min="0.05" max="1.0" value="0.5" step="0.05" oninput="runSim()"></div>
+            <div><label>最低EV: <span id="evVal">1.0</span></label><input type="range" id="minEV" min="1.0" max="5.0" value="1.0" step="0.1" oninput="runSim()"></div>
+            <div><label>最低オッズ: <span id="minOdds">1.0</span></label><input type="range" id="minOddsRange" min="1.0" max="20.0" value="1.0" step="0.5" oninput="runSim()"></div>
+        </div>
+        <div class="summary-grid">
+            <div class="card"><h3>最終純損益</h3><p id="finalProfit" style="color:var(--accent);">¥0</p></div>
+            <div class="card"><h3>回収率</h3><p id="roiText">-</p></div>
+            <div class="card"><h3>的中率</h3><p id="hitRateText">-</p></div>
+            <div class="card"><h3>購入レース数</h3><p id="activeCountText">-</p></div>
+            <div class="card"><h3>最大DD</h3><p id="ddText">-</p></div>
+        </div>
+        <div class="charts-container">
+            <div class="chart-box"><canvas id="pChart"></canvas></div>
+            <div style="display:flex; flex-direction:column; gap:20px;">
+                <div class="chart-box" style="height:190px;"><canvas id="dChart"></canvas></div>
+                <div class="chart-box" style="height:190px;"><canvas id="iChart"></canvas></div>
+            </div>
+        </div>
+        <table>
+            <thead><tr><th>開催</th><th>レース名</th><th>券種</th><th>組み合わせ</th><th>EV</th><th>勝率</th><th>オッズ</th><th>投資額</th><th>結果</th><th>累積損益</th></tr></thead>
+            <tbody id="tbody"></tbody>
+        </table>
+    </div>
+    <script>
+        const raw = [{"display_id": "04/05 阪神12R", "race_name": "4歳以上2勝クラス", "type": "単勝", "combo": "1", "ev": 2.446, "win_prob": 20.6, "odds": 11.9, "res": "×"}, {"display_id": "04/06 中山12R", "race_name": "4歳以上2勝クラス", "type": "単勝", "combo": "1", "ev": 4.4243, "win_prob": 28.5, "odds": 15.5, "res": "×"}, {"display_id": "04/12 中山4R", "race_name": "4歳以上障害OP", "type": "単勝", "combo": "5", "ev": 2.1246, "win_prob": 17.7, "odds": 12.0, "res": "×"}, {"display_id": "04/12 阪神4R", "race_name": "3歳未勝利", "type": "単勝", "combo": "15", "ev": 8.1026, "win_prob": 24.8, "odds": 32.7, "res": "×"}, {"display_id": "04/12 阪神10R", "race_name": "京橋S", "type": "単勝", "combo": "15", "ev": 2.7484, "win_prob": 12.1, "odds": 22.7, "res": "×"}, {"display_id": "04/19 阪神8R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "5", "ev": 3.0478, "win_prob": 28.2, "odds": 10.8, "res": "○"}, {"display_id": "04/20 阪神3R", "race_name": "3歳未勝利", "type": "単勝", "combo": "11", "ev": 6.5423, "win_prob": 28.0, "odds": 23.4, "res": "×"}, {"display_id": "04/26 京都7R", "race_name": "3歳1勝クラス", "type": "単勝", "combo": "2", "ev": 3.2487, "win_prob": 19.6, "odds": 16.6, "res": "×"}, {"display_id": "04/27 京都11R", "race_name": "マイラーズC", "type": "単勝", "combo": "6", "ev": 2.8795, "win_prob": 29.7, "odds": 9.7, "res": "×"}, {"display_id": "04/27 京都12R", "race_name": "4歳以上2勝クラス", "type": "単勝", "combo": "7", "ev": 2.3081, "win_prob": 25.1, "odds": 9.2, "res": "×"}, {"display_id": "04/27 東京11R", "race_name": "フローラS", "type": "単勝", "combo": "10", "ev": 2.0055, "win_prob": 13.6, "odds": 14.7, "res": "○"}, {"display_id": "04/27 福島6R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "1", "ev": 1.8799, "win_prob": 17.6, "odds": 10.7, "res": "×"}, {"display_id": "05/03 京都4R", "race_name": "3歳未勝利", "type": "単勝", "combo": "1", "ev": 8.8799, "win_prob": 26.2, "odds": 33.9, "res": "×"}, {"display_id": "05/03 新潟4R", "race_name": "4歳以上障害OP", "type": "単勝", "combo": "3", "ev": 1.6447, "win_prob": 18.5, "odds": 8.9, "res": "×"}, {"display_id": "05/03 新潟6R", "race_name": "3歳未勝利", "type": "単勝", "combo": "6", "ev": 1.9819, "win_prob": 21.5, "odds": 9.2, "res": "×"}, {"display_id": "05/03 東京9R", "race_name": "是政S", "type": "単勝", "combo": "3", "ev": 3.4921, "win_prob": 14.9, "odds": 23.5, "res": "×"}, {"display_id": "05/04 東京11R", "race_name": "プリンシパルS", "type": "単勝", "combo": "14", "ev": 1.7327, "win_prob": 17.9, "odds": 9.7, "res": "×"}, {"display_id": "05/10 京都11R", "race_name": "京都新聞杯", "type": "単勝", "combo": "6", "ev": 2.9962, "win_prob": 17.3, "odds": 17.3, "res": "×"}, {"display_id": "05/10 新潟12R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "11", "ev": 2.4702, "win_prob": 25.5, "odds": 9.7, "res": "×"}, {"display_id": "05/11 京都10R", "race_name": "橘S", "type": "単勝", "combo": "3", "ev": 2.2163, "win_prob": 15.4, "odds": 14.4, "res": "○"}, {"display_id": "05/18 京都12R", "race_name": "4歳以上2勝クラス", "type": "単勝", "combo": "11", "ev": 1.5018, "win_prob": 16.0, "odds": 9.4, "res": "×"}, {"display_id": "05/18 新潟6R", "race_name": "3歳未勝利", "type": "単勝", "combo": "5", "ev": 2.1383, "win_prob": 19.1, "odds": 11.2, "res": "○"}, {"display_id": "05/24 京都1R", "race_name": "3歳未勝利", "type": "単勝", "combo": "11", "ev": 3.1745, "win_prob": 21.3, "odds": 14.9, "res": "×"}, {"display_id": "05/24 京都3R", "race_name": "3歳未勝利", "type": "単勝", "combo": "8", "ev": 4.1918, "win_prob": 30.4, "odds": 13.8, "res": "×"}, {"display_id": "05/24 東京8R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "11", "ev": 2.8979, "win_prob": 20.6, "odds": 14.1, "res": "×"}, {"display_id": "05/25 京都11R", "race_name": "都大路S", "type": "単勝", "combo": "2", "ev": 2.1715, "win_prob": 21.5, "odds": 10.1, "res": "×"}, {"display_id": "05/31 京都6R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "10", "ev": 2.4913, "win_prob": 21.3, "odds": 11.7, "res": "×"}, {"display_id": "05/31 京都8R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "18", "ev": 4.3954, "win_prob": 23.8, "odds": 18.5, "res": "○"}, {"display_id": "05/31 東京7R", "race_name": "3歳1勝クラス", "type": "単勝", "combo": "6", "ev": 2.8236, "win_prob": 25.2, "odds": 11.2, "res": "×"}, {"display_id": "05/31 東京8R", "race_name": "4歳以上1勝クラス", "type": "単勝", "combo": "11", "ev": 1.9821, "win_prob": 18.7, "odds": 10.6, "res": "×"}, {"display_id": "06/07 東京5R", "race_name": "2歳新馬", "type": "単勝", "combo": "10", "ev": 7.2326, "win_prob": 14.9, "odds": 48.6, "res": "×"}, {"display_id": "06/14 函館4R", "race_name": "3歳未勝利", "type": "単勝", "combo": "15", "ev": 3.0974, "win_prob": 21.2, "odds": 14.6, "res": "×"}, {"display_id": "06/14 函館10R", "race_name": "松前特別", "type": "単勝", "combo": "6", "ev": 2.463, "win_prob": 22.4, "odds": 11.0, "res": "○"}, {"display_id": "06/15 函館4R", "race_name": "3歳未勝利", "type": "単勝", "combo": "3", "ev": 1.4733, "win_prob": 16.6, "odds": 8.9, "res": "×"}, {"display_id": "06/15 東京1R", "race_name": "3歳未勝利", "type": "単勝", "combo": "9", "ev": 11.3292, "win_prob": 19.4, "odds": 58.3, "res": "×"}, {"display_id": "06/15 東京8R", "race_name": "3歳以上1勝クラス", "type": "単勝", "combo": "4", "ev": 6.2333, "win_prob": 29.8, "odds": 20.9, "res": "×"}, {"display_id": "06/15 阪神3R", "race_name": "3歳未勝利", "type": "単勝", "combo": "9", "ev": 2.2959, "win_prob": 21.7, "odds": 10.6, "res": "×"}, {"display_id": "06/15 阪神8R", "race_name": "逆瀬川特別", "type": "単勝", "combo": "14", "ev": 1.7934, "win_prob": 15.7, "odds": 11.4, "res": "×"}, {"display_id": "06/15 阪神9R", "race_name": "武庫川特別", "type": "単勝", "combo": "8", "ev": 2.8129, "win_prob": 26.5, "odds": 10.6, "res": "×"}, {"display_id": "06/15 阪神10R", "race_name": "花のみちS", "type": "単勝", "combo": "16", "ev": 2.1995, "win_prob": 21.1, "odds": 10.4, "res": "×"}, {"display_id": "06/15 阪神11R", "race_name": "宝塚記念", "type": "単勝", "combo": "12", "ev": 2.372, "win_prob": 20.8, "odds": 11.4, "res": "○"}, {"display_id": "06/15 阪神12R", "race_name": "リボン賞", "type": "単勝", "combo": "8", "ev": 2.4505, "win_prob": 23.6, "odds": 10.4, "res": "○"}, {"display_id": "06/21 函館5R", "race_name": "2歳新馬", "type": "単勝", "combo": "1", "ev": 3.3245, "win_prob": 10.0, "odds": 33.1, "res": "×"}, {"display_id": "06/21 函館6R", "race_name": "2歳新馬", "type": "単勝", "combo": "7", "ev": 1.4335, "win_prob": 15.8, "odds": 9.1, "res": "×"}, {"display_id": "06/21 東京5R", "race_name": "2歳新馬", "type": "単勝", "combo": "12", "ev": 1.7675, "win_prob": 9.9, "odds": 17.8, "res": "×"}, {"display_id": "06/21 東京6R", "race_name": "2歳新馬", "type": "単勝", "combo": "11", "ev": 3.3222, "win_prob": 8.7, "odds": 38.3, "res": "×"}, {"display_id": "06/21 阪神2R", "race_name": "3歳未勝利", "type": "単勝", "combo": "5", "ev": 6.1635, "win_prob": 46.0, "odds": 13.4, "res": "×"}, {"display_id": "06/21 阪神10R", "race_name": "ストークS", "type": "単勝", "combo": "1", "ev": 4.7626, "win_prob": 18.6, "odds": 25.6, "res": "×"}, {"display_id": "06/22 函館4R", "race_name": "3歳未勝利", "type": "単勝", "combo": "3", "ev": 2.6756, "win_prob": 21.2, "odds": 12.6, "res": "×"}, {"display_id": "06/22 函館5R", "race_name": "2歳新馬", "type": "単勝", "combo": "5", "ev": 1.6688, "win_prob": 10.3, "odds": 16.2, "res": "×"}, {"display_id": "06/22 東京1R", "race_name": "3歳以上障害未勝利", "type": "単勝", "combo": "4", "ev": 5.9397, "win_prob": 19.7, "odds": 30.2, "res": "×"}, {"display_id": "06/22 東京2R", "race_name": "3歳未勝利", "type": "単勝", "combo": "8", "ev": 3.5803, "win_prob": 34.4, "odds": 10.4, "res": "○"}, {"display_id": "06/22 東京6R", "race_name": "2歳新馬", "type": "単勝", "combo": "14", "ev": 2.0233, "win_prob": 8.5, "odds": 23.8, "res": "○"}, {"display_id": "06/22 東京10R", "race_name": "多摩川S", "type": "単勝", "combo": "16", "ev": 3.268, "win_prob": 21.9, "odds": 14.9, "res": "×"}, {"display_id": "06/22 阪神6R", "race_name": "2歳新馬", "type": "単勝", "combo": "11", "ev": 1.5278, "win_prob": 8.6, "odds": 17.8, "res": "×"}, {"display_id": "06/28 函館8R", "race_name": "3歳以上1勝クラス", "type": "単勝", "combo": "10", "ev": 2.4666, "win_prob": 19.4, "odds": 12.7, "res": "×"}, {"display_id": "06/28 函館11R", "race_name": "青函S", "type": "単勝", "combo": "10", "ev": 4.0339, "win_prob": 15.6, "odds": 25.8, "res": "○"}, {"display_id": "06/28 函館12R", "race_name": "3歳以上1勝クラス", "type": "単勝", "combo": "10", "ev": 4.4778, "win_prob": 20.4, "odds": 22.0, "res": "×"}, {"display_id": "06/28 小倉2R", "race_name": "2歳未勝利", "type": "単勝", "combo": "1", "ev": 5.7546, "win_prob": 30.1, "odds": 19.1, "res": "○"}, {"display_id": "06/28 小倉3R", "race_name": "3歳未勝利", "type": "単勝", "combo": "15", "ev": 2.3129, "win_prob": 21.0, "odds": 11.0, "res": "×"}, {"display_id": "06/29 函館5R", "race_name": "2歳新馬", "type": "単勝", "combo": "3", "ev": 3.4895, "win_prob": 10.4, "odds": 33.6, "res": "×"}, {"display_id": "06/29 函館11R", "race_name": "函館記念", "type": "単勝", "combo": "8", "ev": 2.8366, "win_prob": 21.8, "odds": 13.0, "res": "○"}, {"display_id": "06/29 小倉2R", "race_name": "3歳未勝利", "type": "単勝", "combo": "10", "ev": 4.4502, "win_prob": 29.3, "odds": 15.2, "res": "×"}, {"display_id": "06/29 小倉5R", "race_name": "2歳新馬", "type": "単勝", "combo": "9", "ev": 1.367, "win_prob": 10.8, "odds": 12.7, "res": "×"}, {"display_id": "06/29 福島11R", "race_name": "ラジオNIKKEI賞", "type": "単勝", "combo": "7", "ev": 1.7962, "win_prob": 12.8, "odds": 14.0, "res": "×"}];
+        let charts = {};
+        function runSim() {
+            const cap0 = parseFloat(document.getElementById('initCap').value) || 100000;
+            const k = parseFloat(document.getElementById('kelly').value);
+            const mEV = parseFloat(document.getElementById('minEV').value);
+            const mOdds = parseFloat(document.getElementById('minOddsRange').value);
+            document.getElementById('kellyVal').innerText = k;
+            document.getElementById('evVal').innerText = mEV.toFixed(1);
+            document.getElementById('minOdds').innerText = mOdds.toFixed(1);
+
+            let cap = cap0, maxCap = cap0, maxDD = 0, invT = 0, payT = 0, hits = 0, activeCount = 0;
+            const pHist = [0], ddHist = [0], iHist = [0], labels = ["開始"];
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+
+            raw.forEach((d) => {
+                if (d.ev >= mEV && d.odds >= mOdds) {
+                    activeCount++;
+                    const b = d.odds - 1;
+                    const p = d.win_prob / 100;
+                    const f = Math.max(0, (p * (b + 1) - 1) / b);
+                    let inv = Math.floor(cap * f * k / 100) * 100;
+                    if (inv < 100 && cap >= 100 && f > 0) inv = 100;
+                    if (inv > cap) inv = Math.floor(cap / 100) * 100;
+                    const pay = (d.res === "○") ? Math.floor(inv * d.odds) : 0;
+                    cap = cap - inv + pay;
+                    invT += inv; payT += pay; if (d.res === "○") hits++;
+                    maxCap = Math.max(maxCap, cap);
+                    maxDD = Math.max(maxDD, maxCap - cap);
+                    const curP = cap - cap0;
+                    pHist.push(curP); ddHist.push(maxCap - cap); iHist.push(inv); labels.push(d.display_id);
+                    tbody.innerHTML += `<tr class="${d.res==='○'?'status-win':''}"><td>${d.display_id}</td><td>${d.race_name}</td><td>${d.type}</td><td>${d.combo}</td><td>${d.ev.toFixed(2)}</td><td>${d.win_prob}%</td><td>${d.odds.toFixed(1)}倍</td><td>¥${inv.toLocaleString()}</td><td>${d.res==='○'?'的中':'×'}</td><td style="font-weight:bold; color:${curP>=0?'#27ae60':'#e74c3c'}">¥${curP.toLocaleString()}</td></tr>`;
+                }
+            });
+
+            document.getElementById('finalProfit').innerText = '¥' + (cap-cap0).toLocaleString();
+            document.getElementById('roiText').innerText = invT>0 ? (payT/invT*100).toFixed(1)+'%' : '0%';
+            document.getElementById('hitRateText').innerText = activeCount>0 ? (hits/activeCount*100).toFixed(1)+'%' : '0%';
+            document.getElementById('activeCountText').innerText = activeCount + ' レース';
+            document.getElementById('ddText').innerText = '¥' + maxDD.toLocaleString();
+
+            drawChart('pChart', '資産推移', labels, pHist, '#2980b9');
+            drawChart('dChart', 'ドローダウン', labels, ddHist, '#e74c3c');
+            drawChart('iChart', '投資額', labels, iHist, '#95a5a6', 'bar');
+        }
+        function drawChart(id, title, labels, data, color, type='line') {
+            const ctx = document.getElementById(id);
+            if (charts[id]) charts[id].destroy();
+            charts[id] = new Chart(ctx, {
+                type: type,
+                data: { labels: labels, datasets: [{ label: title, data: data, borderColor: color, backgroundColor: color+(type==='bar'?'88':'22'), fill: true, tension: 0.1, pointRadius: labels.length > 100 ? 0 : 3 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, title: { display: true, text: title } }, scales: { x: { display: labels.length < 50 }, y: { grid: { color: (c) => c.tick.value === 0 ? '#000' : '#eee' } } } }
+            });
+        }
+        window.onload = runSim;
+    </script>
+</body>
+</html>
+    

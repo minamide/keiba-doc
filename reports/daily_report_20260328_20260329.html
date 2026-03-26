@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>競馬予想 2026/03/28 / 2026/03/29</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0f172a; --card: #1e293b; --border: #334155;
+    --text: #e2e8f0; --muted: #94a3b8;
+    --green: #22c55e; --blue: #3b82f6; --yellow: #f59e0b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 24px; }
+  h1 { font-size: 1.4rem; margin-bottom: 4px; }
+  .sub { color: var(--muted); font-size: .85rem; margin-bottom: 20px; }
+  .summary { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; min-width: 160px; }
+  .kpi-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .kpi-value { font-size: 1.5rem; font-weight: 700; margin-top: 4px; color: var(--blue); }
+
+  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .filters label { font-size: .8rem; color: var(--muted); }
+  .filters input[type=range] { accent-color: var(--blue); width: 140px; }
+  .filters input[type=number] { background: var(--bg); border: 1px solid var(--border); color: var(--text); padding: 4px 8px; border-radius: 6px; width: 100px; font-size: .85rem; }
+  .filter-group { display: flex; flex-direction: column; gap: 4px; }
+
+  .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .chart-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .chart-title { font-size: .8rem; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: .05em; }
+  .chart-wrap { position: relative; height: 200px; }
+  .chart-wrap-tall { position: relative; height: 280px; }
+
+  .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .table-wrap h2 { font-size: .95rem; padding: 14px 20px; border-bottom: 1px solid var(--border); }
+  .stat-bar { display: flex; gap: 16px; padding: 10px 20px; background: #0f172a; font-size: .8rem; color: var(--muted); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .stat-bar b { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  th { background: #0a0f1e; padding: 10px 14px; text-align: left; color: var(--muted); font-weight: 500; position: sticky; top: 0; z-index: 1; }
+  td { padding: 9px 14px; border-bottom: 1px solid #1e293b; vertical-align: middle; }
+  tr:hover td { background: #1e293b60; }
+  .group-cell { background: #131e2e; color: var(--muted); font-size: .78rem; }
+  .race-name { font-weight: 500; color: var(--text); font-size: .82rem; line-height: 1.4; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  .mono { font-family: monospace; font-size: .9rem; font-weight: 600; letter-spacing: .05em; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: .72rem; font-weight: 600; }
+  .tag-win   { background: #1e3a5f; color: #93c5fd; }
+  .tag-place { background: #1a3340; color: #67e8f9; }
+  .tag-q     { background: #2d1f40; color: #c4b5fd; }
+  .tag-w     { background: #2d3a1f; color: #86efac; }
+  .tag-e     { background: #3a2a1f; color: #fdba74; }
+  .remark { font-size: .72rem; background: #2d2a1f; color: #fcd34d; padding: 2px 6px; border-radius: 4px; }
+  .remark-cell { min-width: 80px; }
+  small { font-size: .72rem; }
+</style>
+</head>
+<body>
+<h1>🏇 競馬予想レポート</h1>
+<p class="sub">2026/03/28 / 2026/03/29 ｜ ケリー基準投資</p>
+
+<div class="summary">
+  <div class="kpi"><div class="kpi-label">推奨件数</div><div class="kpi-value" id="kpi-count">12件</div></div>
+  <div class="kpi"><div class="kpi-label">合計投資額（目安）</div><div class="kpi-value" id="kpi-inv">7,400円</div></div>
+  <div class="kpi"><div class="kpi-label">平均EV</div><div class="kpi-value" id="kpi-ev">-</div></div>
+  <div class="kpi"><div class="kpi-label">平均予想的中率</div><div class="kpi-value" id="kpi-prob">-</div></div>
+</div>
+
+<div class="filters">
+  <div class="filter-group">
+    <label>初期運用資金 (円)</label>
+    <input type="number" id="budget" value="10000" min="1000" step="1000" oninput="updateAll()">
+  </div>
+  <div class="filter-group">
+    <label>ケリー係数: <b id="kelly-val">0.20</b></label>
+    <input type="range" id="kelly" min="0.05" max="1.0" step="0.05" value="0.2" oninput="document.getElementById('kelly-val').textContent=parseFloat(this.value).toFixed(2);updateAll()">
+  </div>
+  <div class="filter-group">
+    <label>最低EV: <b id="ev-val">1.0</b></label>
+    <input type="range" id="min-ev" min="1.0" max="10.0" step="0.1" value="1.0" oninput="document.getElementById('ev-val').textContent=parseFloat(this.value).toFixed(1);updateAll()">
+  </div>
+</div>
+
+<!-- グラフ行 -->
+<div class="charts-row">
+  <div class="chart-card">
+    <div class="chart-title">EV分布</div>
+    <div class="chart-wrap"><canvas id="chart-ev"></canvas></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">券種別件数</div>
+    <div class="chart-wrap"><canvas id="chart-type"></canvas></div>
+  </div>
+  <div class="chart-card" style="grid-column: span 1;">
+    <div class="chart-title">レース別投資額</div>
+    <div class="chart-wrap-tall"><canvas id="chart-race"></canvas></div>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <h2>📋 推奨馬券一覧</h2>
+  <div class="stat-bar" id="stat-bar"></div>
+  <div style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr>
+          <th>日付</th><th>開催</th><th>R</th><th>レース名</th>
+          <th>券種</th><th>組み合わせ</th><th>オッズ</th><th>EV</th><th>確率</th><th>投資額</th><th>備考</th>
+        </tr>
+      </thead>
+      <tbody id="bet-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const RAW = [{"date": "20260328", "venue": "中山", "R": 5, "race": "3歳未勝利", "race_id": "202606030105", "type": "単勝", "combo": "8(コスモシグルン)", "prob": 0.6114, "ev": 6.4197, "odds": 10.5, "invest": 1100, "remarks": ""}, {"date": "20260328", "venue": "中山", "R": 11, "race": "日経賞", "race_id": "202606030111", "type": "単勝", "combo": "10(クリスマスパレード)", "prob": 0.1147, "ev": 6.0207, "odds": 28.3, "invest": 100, "remarks": ""}, {"date": "20260328", "venue": "中京", "R": 3, "race": "3歳未勝利", "race_id": "202607010503", "type": "単勝", "combo": "15(イーサンミラー)", "prob": 0.578, "ev": 19.3053, "odds": 33.4, "invest": 1100, "remarks": ""}, {"date": "20260328", "venue": "中京", "R": 11, "race": "マレーシアカップ", "race_id": "202607010511", "type": "単勝", "combo": "10(ミラビリスマジック)", "prob": 0.1259, "ev": 5.477, "odds": 22.9, "invest": 100, "remarks": ""}, {"date": "20260328", "venue": "阪神", "R": 1, "race": "3歳未勝利", "race_id": "202609020101", "type": "単勝", "combo": "5(エールドリー)", "prob": 0.5303, "ev": 24.3939, "odds": 46.0, "invest": 1000, "remarks": ""}, {"date": "20260328", "venue": "阪神", "R": 8, "race": "三木ホースランドパークジャンプステークス", "race_id": "202609020108", "type": "単勝", "combo": "8(ブラックボイス)", "prob": 0.2867, "ev": 9.69, "odds": 10.7, "invest": 400, "remarks": ""}, {"date": "20260328", "venue": "阪神", "R": 12, "race": "4歳以上2勝クラス", "race_id": "202609020112", "type": "単勝", "combo": "1(エンマ)", "prob": 0.4286, "ev": 5.0143, "odds": 18.1, "invest": 700, "remarks": ""}, {"date": "20260329", "venue": "中山", "R": 3, "race": "3歳未勝利", "race_id": "202606030203", "type": "単勝", "combo": "3(ジョイグリーン)", "prob": 0.4, "ev": 12.16, "odds": 30.4, "invest": 700, "remarks": ""}, {"date": "20260329", "venue": "中山", "R": 5, "race": "3歳未勝利", "race_id": "202606030205", "type": "単勝", "combo": "1(アイスアイスベイビ)", "prob": 0.3466, "ev": 8.3175, "odds": 24.0, "invest": 600, "remarks": ""}, {"date": "20260329", "venue": "中山", "R": 9, "race": "ミモザ賞", "race_id": "202606030209", "type": "単勝", "combo": "11(ユメシルベ)", "prob": 0.2058, "ev": 3.9919, "odds": 19.4, "invest": 300, "remarks": ""}, {"date": "20260329", "venue": "中京", "R": 5, "race": "3歳未勝利", "race_id": "202607010605", "type": "単勝", "combo": "3(バチラ)", "prob": 0.4094, "ev": 6.5088, "odds": 9.0, "invest": 600, "remarks": ""}, {"date": "20260329", "venue": "阪神", "R": 8, "race": "4歳以上1勝クラス", "race_id": "202609020208", "type": "単勝", "combo": "2(ヴェストラン)", "prob": 0.4094, "ev": 7.0409, "odds": 17.2, "invest": 700, "remarks": ""}];
+
+// Chart.js インスタンス管理
+const charts = {};
+const CHART_DEFAULTS = {
+  color: '#e2e8f0',
+  borderColor: '#334155',
+  plugins: { legend: { labels: { color: '#94a3b8', font: { size: 11 } } } },
+  scales_default: {
+    x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+    y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } }
+  }
+};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function calcKelly(prob, odds, budget, kf) {
+  if (odds <= 1 || prob <= 0) return 0;
+  const b = odds - 1;
+  const fs = (prob * odds - 1) / b;
+  if (fs <= 0) return 0;
+  const f = Math.min(fs * kf, 0.2);
+  const amt = Math.floor(budget * f / 100) * 100;
+  return amt >= 100 ? amt : 0;
+}
+
+function getFiltered() {
+  const budget = parseFloat(document.getElementById('budget').value) || 10000;
+  const kelly  = parseFloat(document.getElementById('kelly').value);
+  const minEv  = parseFloat(document.getElementById('min-ev').value);
+  return RAW
+    .map(b => ({...b, invest: calcKelly(b.prob, b.odds, budget, kelly)}))
+    .filter(b => b.invest > 0 && b.ev >= minEv);
+}
+
+// ---- グラフ描画 ----
+
+function drawEvChart(filtered) {
+  destroyChart('ev');
+  // EV帯: 1-2, 2-3, 3-4, 4-5, 5+
+  const bands = ['1〜2', '2〜3', '3〜4', '4〜5', '5+'];
+  const counts = [0,0,0,0,0];
+  filtered.forEach(b => {
+    if (b.ev < 2) counts[0]++;
+    else if (b.ev < 3) counts[1]++;
+    else if (b.ev < 4) counts[2]++;
+    else if (b.ev < 5) counts[3]++;
+    else counts[4]++;
+  });
+  const ctx = document.getElementById('chart-ev').getContext('2d');
+  charts['ev'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: bands,
+      datasets: [{ label: '件数', data: counts,
+        backgroundColor: ['#1e40af','#1d4ed8','#2563eb','#3b82f6','#60a5fa'],
+        borderRadius: 4, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } },
+        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function drawTypeChart(filtered) {
+  destroyChart('type');
+  const counts = {};
+  filtered.forEach(b => { counts[b.type] = (counts[b.type]||0) + 1; });
+  const labels = Object.keys(counts);
+  const data   = Object.values(counts);
+  const COLORS = ['#3b82f6','#06b6d4','#8b5cf6','#22c55e','#f59e0b'];
+  const ctx = document.getElementById('chart-type').getContext('2d');
+  charts['type'] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{ data, backgroundColor: COLORS.slice(0, labels.length),
+        borderColor: '#0f172a', borderWidth: 2 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, padding: 10 } },
+      }
+    }
+  });
+}
+
+function drawRaceChart(filtered) {
+  destroyChart('race');
+  // レース別合計投資額（上位15件まで）
+  const raceMap = {};
+  filtered.forEach(b => {
+    const key = `${b.venue} ${b.R}R`;
+    raceMap[key] = (raceMap[key]||0) + b.invest;
+  });
+  const sorted = Object.entries(raceMap).sort((a,b) => b[1]-a[1]).slice(0, 15);
+  const labels = sorted.map(([k]) => k);
+  const data   = sorted.map(([,v]) => v);
+  const ctx = document.getElementById('chart-race').getContext('2d');
+  charts['race'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label: '投資額(円)', data,
+        backgroundColor: '#3b82f680', borderColor: '#3b82f6', borderWidth: 1, borderRadius: 3 }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' }, beginAtZero: true },
+        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: '#1e293b' } }
+      }
+    }
+  });
+}
+
+// ---- テーブル描画 ----
+
+function drawTable(filtered) {
+  const TYPE_TAG = {"単勝":"tag-win","複勝":"tag-place","馬連":"tag-q","ワイド":"tag-w","馬単":"tag-e"};
+  const sorted = [...filtered].sort((a, b) =>
+    (a.date+String(a.R).padStart(2,'0')+a.venue).localeCompare(b.date+String(b.R).padStart(2,'0')+b.venue)
+  );
+
+  let html = '';
+  let i = 0;
+  let totalInvest = 0;
+  const typeCount = {};
+
+  while (i < sorted.length) {
+    const b = sorted[i];
+    const sameRace = sorted.filter(x => x.date===b.date && x.venue===b.venue && x.R===b.R);
+    const d = `${b.date.slice(0,4)}/${b.date.slice(4,6)}/${b.date.slice(6)}`;
+
+    sameRace.forEach((r, j) => {
+      const ev_color   = r.ev>=4?'#22c55e':r.ev>=2?'#f59e0b':'#94a3b8';
+      const prob_color = r.prob>=0.3?'#22c55e':r.prob>=0.15?'#f59e0b':'#94a3b8';
+      const tag = TYPE_TAG[r.type]||'';
+      const rem = r.remarks ? `<span class="remark">${r.remarks}</span>` : '';
+      typeCount[r.type] = (typeCount[r.type]||0) + 1;
+      totalInvest += r.invest;
+      if (j === 0) {
+        html += `<tr>
+          <td rowspan="${sameRace.length}" class="group-cell">${d}</td>
+          <td rowspan="${sameRace.length}" class="group-cell">${r.venue}</td>
+          <td rowspan="${sameRace.length}" class="group-cell center">${r.R}R</td>
+          <td rowspan="${sameRace.length}" class="group-cell race-name">${r.race}</td>
+          <td><span class="tag ${tag}">${r.type}</span></td>
+          <td class="mono">${r.combo}</td>
+          <td class="right">${r.odds.toFixed(1)}倍</td>
+          <td class="right" style="color:${ev_color}">${r.ev.toFixed(2)}</td>
+          <td class="right" style="color:${prob_color}">${(r.prob*100).toFixed(1)}%</td>
+          <td class="right">${r.invest.toLocaleString()}円</td>
+          <td class="remark-cell">${rem}</td>
+        </tr>`;
+      } else {
+        html += `<tr>
+          <td><span class="tag ${tag}">${r.type}</span></td>
+          <td class="mono">${r.combo}</td>
+          <td class="right">${r.odds.toFixed(1)}倍</td>
+          <td class="right" style="color:${ev_color}">${r.ev.toFixed(2)}</td>
+          <td class="right" style="color:${prob_color}">${(r.prob*100).toFixed(1)}%</td>
+          <td class="right">${r.invest.toLocaleString()}円</td>
+          <td class="remark-cell">${rem}</td>
+        </tr>`;
+      }
+    });
+    i += sameRace.length;
+  }
+
+  document.getElementById('bet-tbody').innerHTML = html;
+  document.getElementById('kpi-count').textContent = filtered.length + '件';
+  document.getElementById('kpi-inv').textContent   = totalInvest.toLocaleString() + '円';
+
+  const evAvg   = filtered.length > 0
+    ? (filtered.reduce((s, b) => s + b.ev,   0) / filtered.length).toFixed(2)
+    : '-';
+  const probAvg = filtered.length > 0
+    ? (filtered.reduce((s, b) => s + b.prob, 0) / filtered.length * 100).toFixed(1) + '%'
+    : '-';
+  document.getElementById('kpi-ev').textContent   = evAvg;
+  document.getElementById('kpi-prob').textContent = probAvg;
+
+  document.getElementById('stat-bar').innerHTML =
+    `<span>表示: <b>${filtered.length}件</b></span>` +
+    `<span>投資合計: <b>${totalInvest.toLocaleString()}円</b></span>` +
+    Object.entries(typeCount).map(([t,c])=>`<span>${t}: <b>${c}</b></span>`).join('');
+}
+
+function updateAll() {
+  const filtered = getFiltered();
+  drawEvChart(filtered);
+  drawTypeChart(filtered);
+  drawRaceChart(filtered);
+  drawTable(filtered);
+}
+
+updateAll();
+</script>
+</body>
+</html>
