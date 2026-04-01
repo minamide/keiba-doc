@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>党員サポートWEBアプリ 設計書</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  /* ===== カラー変数（ライトモード） ===== */
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0ede8;
+    --border: #ddd9d2;
+    --border2: #c8c4bc;
+    --accent: #1a3a5c;      /* 紺 — 見出し・アクセント */
+    --accent2: #2a5a8c;
+    --red: #b83228;
+    --green: #1e6b3c;
+    --amber: #8a4a00;
+    --text: #1a1816;
+    --text-sub: #4a4844;
+    --text-muted: #8a8680;
+    --tag-bg: #eef2f8;
+    --tag-color: #1a3a5c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+    line-height: 1.8;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0;
+    width: 240px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 28px 0;
+    overflow-y: auto;
+    z-index: 100;
+  }
+
+  .sidebar-logo {
+    padding: 0 22px 22px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+
+  .sidebar-logo .mark {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+
+  .sidebar-logo .title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1.5;
+  }
+
+  .sidebar-logo .version {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+
+  .nav-section { padding: 0 14px; margin-bottom: 6px; }
+
+  .nav-label {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 10px 8px 3px;
+    font-weight: 500;
+  }
+
+  .nav-item {
+    display: block;
+    padding: 6px 12px;
+    border-radius: 5px;
+    font-size: 12.5px;
+    color: var(--text-sub);
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.12s;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: 'Noto Sans JP', sans-serif;
+    font-weight: 300;
+  }
+
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: #e8f0f8; color: var(--accent); font-weight: 500; }
+
+  /* ===== MAIN ===== */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    background: rgba(247,246,243,0.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    padding: 13px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 50;
+  }
+
+  .topbar-breadcrumb {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .topbar-breadcrumb span { color: var(--accent); font-weight: 500; }
+
+  /* 印刷ボタン */
+  .print-btn {
+    padding: 5px 14px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.15s;
+  }
+  .print-btn:hover { opacity: 0.85; }
+
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-meta { font-size: 11px; color: var(--text-muted); }
+
+  .content {
+    padding: 52px 56px;
+    max-width: 900px;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ===== HEADINGS ===== */
+  .page-title {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+
+  .page-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 2px solid var(--border);
+  }
+
+  h2 {
+    font-family: 'Noto Serif JP', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    margin: 40px 0 14px;
+    padding: 8px 14px;
+    background: #eef3f9;
+    border-left: 4px solid var(--accent);
+    border-radius: 0 4px 4px 0;
+  }
+
+  h3 {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+    margin: 22px 0 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  p {
+    font-size: 13.5px;
+    color: var(--text-sub);
+    margin-bottom: 12px;
+    line-height: 1.9;
+  }
+
+  /* ===== CARDS ===== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 5px;
+  }
+
+  .card-desc {
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.8;
+  }
+
+  /* ===== TAGS ===== */
+  .tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .tag {
+    display: inline-block;
+    padding: 2px 9px;
+    background: var(--tag-bg);
+    border: 1px solid #c8d8ec;
+    border-radius: 3px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--tag-color);
+  }
+  .tag.red { color: var(--red); background: #fdf0ee; border-color: #f0c0bc; }
+  .tag.gray { color: var(--text-muted); background: var(--surface2); border-color: var(--border); }
+
+  /* ===== TABLE ===== */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    margin: 14px 0 22px;
+  }
+
+  th {
+    background: #eef3f9;
+    color: var(--accent);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 9px 13px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+
+  td {
+    padding: 9px 13px;
+    border: 1px solid var(--border);
+    color: var(--text-sub);
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: #faf9f7; }
+
+  td code, th code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: #1a5080;
+    background: #e8f0f8;
+    padding: 1px 5px;
+    border-radius: 3px;
+    border: 1px solid #c8d8ec;
+  }
+
+  /* ===== CODE BLOCK ===== */
+  pre {
+    background: #f4f2ee;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--border2);
+    border-radius: 4px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.75;
+    color: #2a2826;
+    margin: 10px 0 18px;
+  }
+
+  pre .comment { color: #8a8680; font-style: italic; }
+  pre .key { color: #1a5080; font-weight: 500; }
+  pre .str { color: #1e6b3c; }
+  pre .kw { color: #6b3a8a; font-weight: 500; }
+
+  /* ===== GRID ===== */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 18px; }
+
+  /* ===== SYSTEM DIAGRAM ===== */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 28px;
+    margin: 18px 0;
+    text-align: center;
+  }
+
+  .arch-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+
+  .arch-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 5px;
+    padding: 9px 14px;
+    font-size: 12px;
+    min-width: 110px;
+    text-align: center;
+  }
+
+  .arch-box .label { font-size: 9px; color: var(--text-muted); margin-bottom: 3px; letter-spacing: 0.05em; }
+  .arch-box .name { color: var(--text); font-weight: 500; font-size: 12.5px; }
+  .arch-box.accent { border-color: var(--accent); background: #eef3f9; }
+  .arch-box.accent .name { color: var(--accent); }
+  .arch-box.red { border-color: #c05040; background: #fdf0ee; }
+  .arch-box.red .name { color: #a03020; }
+
+  .arch-layer {
+    font-size: 9.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 18px 0 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+  }
+
+  .arch-layer::before, .arch-layer::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ===== BADGE ===== */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .badge-green  { background: #e6f4eb; color: var(--green);  border: 1px solid #b0d8c0; }
+  .badge-yellow { background: #fdf5e6; color: #7a4800;       border: 1px solid #e8c880; }
+  .badge-red    { background: #fdecea; color: var(--red);    border: 1px solid #f0b8b0; }
+  .badge-blue   { background: #eef3f9; color: var(--accent); border: 1px solid #b8ccE4; }
+
+  /* ===== INFO / WARN BOX ===== */
+  .info-box {
+    background: #eef6ff;
+    border: 1px solid #b8d4f0;
+    border-left: 4px solid var(--accent);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.75;
+  }
+  .info-box strong { color: var(--accent); }
+
+  .warn-box {
+    background: #fdf4f3;
+    border: 1px solid #f0c0b8;
+    border-left: 4px solid var(--red);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: var(--text-sub);
+    line-height: 1.75;
+  }
+  .warn-box strong { color: var(--red); }
+
+  /* ===== LIST ===== */
+  ul.doc-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 18px;
+  }
+  ul.doc-list li {
+    font-size: 13px;
+    color: var(--text-sub);
+    padding: 4px 0 4px 18px;
+    position: relative;
+    line-height: 1.75;
+  }
+  ul.doc-list li::before {
+    content: '▸';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-size: 10px;
+    top: 6px;
+  }
+
+  /* ===== SCROLLBAR ===== */
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* ===== 印刷スタイル ===== */
+  @media print {
+    /* 用紙設定: A4縦、余白 */
+    @page {
+      size: A4 portrait;
+      margin: 18mm 16mm 20mm 16mm;
+    }
+
+    /* サイドバー・トップバー・印刷ボタンを非表示 */
+    .sidebar, .topbar { display: none !important; }
+
+    /* メインを全幅に */
+    .main { margin-left: 0 !important; }
+    .content { padding: 0 !important; max-width: 100% !important; }
+
+    /* 全セクションを表示 */
+    .section { display: block !important; }
+
+    /* セクション間にページ区切り */
+    .section { page-break-before: always; }
+    .section:first-child { page-break-before: avoid; }
+
+    /* 見出し直前での改ページを防ぐ */
+    h2 { page-break-after: avoid; }
+    h3 { page-break-after: avoid; }
+
+    /* テーブルが途中で切れないよう配慮 */
+    tr { page-break-inside: avoid; }
+    table { page-break-inside: auto; }
+
+    /* コードブロックが長い場合は改ページ許容 */
+    pre { page-break-inside: auto; white-space: pre-wrap; word-break: break-all; }
+
+    /* カード・グリッドは折り返し許容 */
+    .grid2, .grid3 { display: block !important; }
+    .grid2 .card, .grid3 .card { margin-bottom: 8px; }
+    .card { page-break-inside: avoid; }
+
+    /* リンク・背景色を印刷用に調整 */
+    body { background: white !important; color: black !important; font-size: 11pt; }
+    h2 { background: #eef3f9 !important; color: #1a3a5c !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    th { background: #eef3f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tr:nth-child(even) td { background: #fafaf8 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .info-box { background: #eef6ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .warn-box { background: #fdf4f3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    pre { background: #f4f2ee !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .badge-red, .badge-green, .badge-yellow, .badge-blue { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* ページヘッダー（各ページの上部に文書名） */
+    .print-header {
+      display: block !important;
+      position: running(header);
+      font-size: 9pt;
+      color: #888;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* アーチ図はグリッド保持 */
+    .arch-diagram { page-break-inside: avoid; }
+    .arch-row { flex-wrap: wrap; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="mark">設計書 / Design Document</div>
+    <div class="title">党員サポート<br>WEBアプリ</div>
+    <div class="version">v1.0 — 2026.04</div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">概要</div>
+    <button class="nav-item active" onclick="showSection('overview')">プロジェクト概要</button>
+    <button class="nav-item" onclick="showSection('requirements')">要件定義</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">システム設計</div>
+    <button class="nav-item" onclick="showSection('architecture')">システム構成図</button>
+    <button class="nav-item" onclick="showSection('auth')">認証サービス設計</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">データ・API</div>
+    <button class="nav-item" onclick="showSection('db')">DB設計</button>
+    <button class="nav-item" onclick="showSection('api')">API設計</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">画面設計</div>
+    <button class="nav-item" onclick="showSection('screens-overview')">画面一覧 & フロー</button>
+    <button class="nav-item" onclick="showSection('screens-auth')">認証画面</button>
+    <button class="nav-item" onclick="showSection('screens-main')">メイン画面</button>
+    <button class="nav-item" onclick="showSection('screens-admin')">管理者画面</button>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">開発計画</div>
+    <button class="nav-item" onclick="showSection('roadmap')">開発ロードマップ</button>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb" id="breadcrumb">設計書 / <span>プロジェクト概要</span></div>
+    <div class="topbar-right">
+      <div class="topbar-meta">機密文書 — 関係者限り</div>
+      <button class="print-btn" onclick="window.print()">🖨 印刷 / PDF保存</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ========== OVERVIEW ========== -->
+    <div class="section active" id="section-overview">
+      <div class="page-title">プロジェクト概要</div>
+      <div class="page-subtitle">党員サポートWEBアプリ — ポスター・チラシ管理 & 党員コミュニケーション基盤</div>
+
+      <h2>アプリケーション概要</h2>
+      <p>党員が連携してポスター・チラシの配布活動を効率化するためのWEBアプリケーション。ポスター掲載場所の地図管理、印刷物の在庫管理、党員間の物資やり取り支援を主な機能として提供する。</p>
+
+      <div class="grid3">
+        <div class="card">
+          <div class="card-title">🗺️ 地図管理</div>
+          <div class="card-desc">ポスター掲載済み・掲載予定場所を地図上でピン管理。党員全員がリアルタイムで共有。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">📦 在庫管理</div>
+          <div class="card-desc">各党員が保持するポスター・チラシの種類と枚数を管理。全体の在庫状況を可視化。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔄 物資やり取り</div>
+          <div class="card-desc">党員間でのポスター・チラシの受け渡しリクエストと承認フローを提供。</div>
+        </div>
+      </div>
+
+      <h2>システム全体像</h2>
+      <p>メインアプリと、他アプリからも利用可能な独立した認証サービスの2つで構成する。</p>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🏠 メインアプリ</div>
+          <div class="card-desc">地図・在庫・やり取り機能を提供するSPA。認証はAuthサービスに委譲。</div>
+          <div class="tags"><span class="tag">Cloudflare Workers</span><span class="tag">React / Hono</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔐 認証サービス（独立）</div>
+          <div class="card-desc">BetterAuthベースの独立した認証サーバー。他のアプリからも利用可能なIdP。</div>
+          <div class="tags"><span class="tag">BetterAuth</span><span class="tag">独立デプロイ</span></div>
+        </div>
+      </div>
+
+      <h2>技術スタック</h2>
+      <table>
+        <thead><tr><th>レイヤー</th><th>技術</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>フロントエンド</td><td>React + TypeScript</td><td>SPA構成</td></tr>
+          <tr><td>バックエンド</td><td>Hono on Cloudflare Workers</td><td>エッジで動作</td></tr>
+          <tr><td>データベース</td><td>Cloudflare D1 (SQLite)</td><td>Workers環境でのRDB</td></tr>
+          <tr><td>ストレージ</td><td>Cloudflare R2</td><td>画像・ファイル保存</td></tr>
+          <tr><td>KVストア</td><td>Cloudflare KV</td><td>セッション・キャッシュ</td></tr>
+          <tr><td>地図</td><td>OpenStreetMap + Leaflet.js</td><td>無償・APIキー不要</td></tr>
+          <tr><td>認証</td><td>BetterAuth（独立サービス）</td><td>OAuth2 / OIDC対応</td></tr>
+          <tr><td>認証プロバイダ</td><td>Google OAuth2 + Email/Password</td><td>2パターン対応</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== REQUIREMENTS ========== -->
+    <div class="section" id="section-requirements">
+      <div class="page-title">要件定義</div>
+      <div class="page-subtitle">機能要件・非機能要件・ユーザーロール定義</div>
+
+      <h2>ユーザーロール</h2>
+      <table>
+        <thead><tr><th>ロール</th><th>説明</th><th>権限</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-red">管理者</span></td>
+            <td>アプリ全体の管理者</td>
+            <td>全機能 + 管理設定変更 + 承認制御 + 党員管理</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-yellow">党員</span></td>
+            <td>一般の党員ユーザー</td>
+            <td>地図ピン追加・編集、在庫管理、やり取りリクエスト</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">承認待ち</span></td>
+            <td>登録済みだが未承認のユーザー</td>
+            <td>閲覧のみ（管理者設定による）</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>機能要件</h2>
+
+      <h3>FR-01 地図管理機能</h3>
+      <table>
+        <thead><tr><th>ID</th><th>機能</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td>FR-01-01</td><td>ピン追加</td><td>地図上をクリックしてポスター設置場所を登録。ステータス（掲載済み/予定）を設定。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-01-02</td><td>ピン編集・削除</td><td>自分が追加したピンの情報更新・削除。管理者は全ピンを操作可能。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-01-03</td><td>ピン情報表示</td><td>クリックで詳細（登録者、日時、メモ、写真）を表示。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-01-04</td><td>フィルター</td><td>ステータス・登録者・エリアでフィルタリング。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+          <tr><td>FR-01-05</td><td>写真アップロード</td><td>設置済みポスターの写真をR2に保存・表示。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>FR-02 在庫管理機能</h3>
+      <table>
+        <thead><tr><th>ID</th><th>機能</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td>FR-02-01</td><td>自分の在庫登録</td><td>ポスター・チラシの種類ごとに保有枚数を登録・更新。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-02-02</td><td>全党員の在庫閲覧</td><td>全党員の保有状況を一覧で確認できる。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-02-03</td><td>印刷物マスタ管理</td><td>管理者がポスター・チラシの種別を登録・管理。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-02-04</td><td>在庫サマリ</td><td>全体の合計在庫数をダッシュボードに表示。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>FR-03 物資やり取り機能</h3>
+      <table>
+        <thead><tr><th>ID</th><th>機能</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td>FR-03-01</td><td>リクエスト作成</td><td>特定の党員に対し、印刷物の受け渡しリクエストを送信。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-03-02</td><td>リクエスト承認・拒否</td><td>受け取り側が承認/拒否。承認時に在庫が自動更新。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-03-03</td><td>やり取り履歴</td><td>過去のやり取り一覧を双方が確認可能。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>FR-05 一般配布記録機能</h3>
+      <table>
+        <thead><tr><th>ID</th><th>機能</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td>FR-05-01</td><td>配布記録の登録</td><td>配布後まとめて or リアルタイムで登録。配布枚数・日時・場所（地図ピン連携）・配布対象・メモを記録。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-05-02</td><td>在庫の自動減算</td><td>配布記録を登録すると、対象印刷物の自分の在庫が自動的に減算される。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-05-03</td><td>配布記録一覧</td><td>自分の過去の配布記録を日付順に一覧表示。種別・期間でフィルタ可能。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-05-04</td><td>地図ピンとの連携</td><td>配布記録登録時に既存の地図ピンを紐づけ、またはその場でピンを新規作成できる。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+          <tr><td>FR-05-05</td><td>管理者の集計閲覧</td><td>管理者は全党員の配布記録を種別・選挙区・期間で集計・閲覧できる。</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>FR-04 認証・承認機能</h3>
+      <table>
+        <thead><tr><th>ID</th><th>機能</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td>FR-04-01</td><td>Google認証</td><td>Google OAuth2によるサインイン。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-04-02</td><td>Eメール認証</td><td>メール + パスワードによるサインイン。メール確認あり。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-04-03</td><td>二次承認フロー</td><td>登録後、LINE or Signal で管理者に連絡し承認を得る。承認後にアクセス可能。</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>FR-04-04</td><td>承認フロー切替</td><td>管理者が設定画面から二次承認の有効/無効を切り替え可能。</td><td><span class="badge badge-red">必須</span></td></tr>
+        </tbody>
+      </table>
+
+      <h2>非機能要件</h2>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">セキュリティ</div>
+          <div class="card-desc">JWT / セッショントークン認証。HTTPS必須。APIはすべて認証済みユーザーのみアクセス可。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">パフォーマンス</div>
+          <div class="card-desc">Cloudflare Workersによるエッジ配信。初期ロード 2秒以内目標。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">可用性</div>
+          <div class="card-desc">Cloudflareの冗長性に依存。99.9%以上の稼働率を目標。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">モバイル対応</div>
+          <div class="card-desc">スマートフォンからの地図操作を考慮したレスポンシブデザイン。</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ARCHITECTURE ========== -->
+    <div class="section" id="section-architecture">
+      <div class="page-title">システム構成図</div>
+      <div class="page-subtitle">全体アーキテクチャと各コンポーネントの関係</div>
+
+      <h2>全体構成</h2>
+
+      <div class="arch-diagram">
+
+        <div class="arch-layer">クライアント層</div>
+        <div class="arch-row">
+          <div class="arch-box"><div class="label">Browser / Mobile</div><div class="name">党員ブラウザ</div></div>
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 20px; margin: 6px 0;">↕</div>
+
+        <div class="arch-layer">CDN / エッジ</div>
+        <div class="arch-row">
+          <div class="arch-box accent"><div class="label">Cloudflare</div><div class="name">Workers / Pages</div></div>
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 20px; margin: 6px 0;">↕ &nbsp;&nbsp;&nbsp;&nbsp; ↕</div>
+
+        <div class="arch-layer">アプリケーション層</div>
+        <div class="arch-row">
+          <div class="arch-box accent"><div class="label">メインアプリ</div><div class="name">Hono API</div></div>
+          <div style="color: var(--text-muted); padding: 20px 4px;">←→</div>
+          <div class="arch-box red"><div class="label">認証サービス（独立）</div><div class="name">BetterAuth Server</div></div>
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 16px; margin: 6px 0;">↕ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ↕</div>
+
+        <div class="arch-layer">データ層</div>
+        <div class="arch-row">
+          <div class="arch-box"><div class="label">メインDB</div><div class="name">D1 (SQLite)</div></div>
+          <div class="arch-box"><div class="label">ファイル</div><div class="name">R2 Storage</div></div>
+          <div class="arch-box"><div class="label">キャッシュ</div><div class="name">KV Store</div></div>
+          <div class="arch-box"><div class="label">認証DB</div><div class="name">D1 (Auth専用)</div></div>
+        </div>
+
+        <div style="color: var(--text-muted); font-size: 12px; margin: 20px 0 4px;">外部連携</div>
+        <div class="arch-row">
+          <div class="arch-box"><div class="label">地図</div><div class="name">OpenStreetMap</div></div>
+          <div class="arch-box"><div class="label">OAuth</div><div class="name">Google OAuth2</div></div>
+          <div class="arch-box"><div class="label">通知</div><div class="name">LINE / Signal</div></div>
+        </div>
+
+      </div>
+
+      <h2>認証フロー概要</h2>
+      <p>認証サービスは独立したWorkersとして別ドメインにデプロイ。OAuth2 / OIDCプロバイダとして機能し、メインアプリ以外の将来のアプリからも利用可能。</p>
+
+      <div class="card">
+        <div class="card-title">認証フロー（二次承認あり）</div>
+        <div class="card-desc">
+          <ol style="padding-left: 18px; font-size: 13px; line-height: 2.2;">
+            <li>ユーザーがメインアプリにアクセス → 認証サービスにリダイレクト</li>
+            <li>Google OAuth2 or Email/Password でサインアップ</li>
+            <li>BetterAuth がユーザーを <code>pending</code> ステータスで登録</li>
+            <li>ユーザーに「管理者にLINE/Signalで連絡し承認を依頼してください」と案内</li>
+            <li>管理者が管理画面からユーザーを <code>approved</code> に変更</li>
+            <li>ユーザーが再度サインインし、JWTトークンを取得</li>
+            <li>メインアプリがトークンを検証しアクセスを許可</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="info-box"><strong>独立サービスの利点：</strong> 将来的に別のWEBアプリを追加する際も、同じ認証サービスのOIDCエンドポイントに接続するだけでシングルサインオンを実現できる。</div>
+
+      <h2>デプロイ構成</h2>
+      <table>
+        <thead><tr><th>サービス</th><th>ドメイン例</th><th>Cloudflare リソース</th></tr></thead>
+        <tbody>
+          <tr><td>メインアプリ フロント</td><td><code>app.example.com</code></td><td>Workers / Pages</td></tr>
+          <tr><td>メインアプリ API</td><td><code>api.example.com</code></td><td>Workers (Hono)</td></tr>
+          <tr><td>認証サービス</td><td><code>auth.example.com</code></td><td>Workers (BetterAuth)</td></tr>
+          <tr><td>ファイルストレージ</td><td><code>r2.example.com</code></td><td>R2 + Workers</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== AUTH ========== -->
+    <div class="section" id="section-auth">
+      <div class="page-title">認証サービス設計</div>
+      <div class="page-subtitle">BetterAuthベースの独立認証サーバー詳細設計</div>
+
+      <h2>設計方針</h2>
+      <div class="info-box">
+        <strong>独立サービスとして設計：</strong>メインアプリに依存しない独立したWorkers。OAuth2 Authorization Server / OIDCプロバイダとして振る舞い、将来のアプリから再利用可能にする。
+      </div>
+
+      <h2>対応認証方式</h2>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Google OAuth2</div>
+          <div class="card-desc">Googleアカウントでのサインイン。BetterAuthのSocialProviderとして設定。アクセストークンはKVにキャッシュ。</div>
+          <div class="tags"><span class="tag">provider: google</span></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Email / Password</div>
+          <div class="card-desc">メールアドレスとパスワードによる認証。サインアップ時にメール確認リンクを送信。パスワードはbcryptでハッシュ化。</div>
+          <div class="tags"><span class="tag">emailVerification: true</span></div>
+        </div>
+      </div>
+
+      <h2>ユーザーステータス管理</h2>
+      <table>
+        <thead><tr><th>ステータス</th><th>説明</th><th>アクセス</th></tr></thead>
+        <tbody>
+          <tr><td><code>pending</code></td><td>登録済み、二次承認待ち</td><td>案内ページのみ表示</td></tr>
+          <tr><td><code>approved</code></td><td>承認済みの一般党員</td><td>メインアプリ全機能</td></tr>
+          <tr><td><code>admin</code></td><td>管理者</td><td>管理機能含む全機能</td></tr>
+          <tr><td><code>suspended</code></td><td>停止中</td><td>アクセス不可</td></tr>
+        </tbody>
+      </table>
+
+      <h2>管理者設定：二次承認の切り替え</h2>
+      <p>管理者は管理画面から二次承認フローの有効/無効を切り替えられる。KVに設定値を保存し、サインアップ時の動作を制御する。</p>
+
+      <pre><span class="comment">// KVに保存する管理者設定</span>
+{
+  <span class="key">"require_secondary_approval"</span>: <span class="kw">true</span>,   <span class="comment">// 二次承認の有無</span>
+  <span class="key">"approval_contact_method"</span>: <span class="str">"line"</span>,   <span class="comment">// "line" | "signal"</span>
+  <span class="key">"admin_contact_info"</span>: <span class="str">"@admin_line_id"</span>  <span class="comment">// 連絡先（表示用）</span>
+}
+
+<span class="comment">// 無効時: サインアップ後すぐに approved になる</span>
+<span class="comment">// 有効時: pending で登録 → 管理者が手動で approved に変更</span></pre>
+
+      <h2>OIDCエンドポイント（他アプリ連携用）</h2>
+      <table>
+        <thead><tr><th>エンドポイント</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td><code>GET /.well-known/openid-configuration</code></td><td>OIDCディスカバリドキュメント</td></tr>
+          <tr><td><code>GET /oauth2/authorize</code></td><td>認可エンドポイント</td></tr>
+          <tr><td><code>POST /oauth2/token</code></td><td>トークン発行</td></tr>
+          <tr><td><code>GET /oauth2/userinfo</code></td><td>ユーザー情報取得</td></tr>
+          <tr><td><code>POST /oauth2/introspect</code></td><td>トークン検証</td></tr>
+          <tr><td><code>GET /oauth2/jwks</code></td><td>公開鍵セット</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== DB ========== -->
+    <div class="section" id="section-db">
+      <div class="page-title">DB設計</div>
+      <div class="page-subtitle">Cloudflare D1 (SQLite) スキーマ定義</div>
+
+      <div class="info-box"><strong>DB分離方針：</strong>認証サービス用D1と、メインアプリ用D1を別インスタンスとして管理する。認証DBへの直接アクセスはAuthサービスのみ。</div>
+
+      <h2>認証DB（auth-db）</h2>
+
+      <h3>users テーブル</h3>
+      <pre><span class="kw">CREATE TABLE</span> users (
+  id           TEXT    PRIMARY KEY,   <span class="comment">-- UUID</span>
+  email        TEXT    NOT NULL UNIQUE,
+  name         TEXT,
+  image        TEXT,                  <span class="comment">-- アバター画像URL</span>
+  status       TEXT    NOT NULL DEFAULT <span class="str">'pending'</span>,
+                                     <span class="comment">-- pending | approved | admin | suspended</span>
+  created_at   INTEGER NOT NULL,     <span class="comment">-- UNIX timestamp</span>
+  updated_at   INTEGER NOT NULL
+);</pre>
+
+      <h3>accounts テーブル（OAuth連携）</h3>
+      <pre><span class="kw">CREATE TABLE</span> accounts (
+  id                   TEXT PRIMARY KEY,
+  user_id              TEXT NOT NULL REFERENCES users(id),
+  provider             TEXT NOT NULL,  <span class="comment">-- "google" | "credential"</span>
+  provider_account_id  TEXT NOT NULL,
+  access_token         TEXT,
+  refresh_token        TEXT,
+  expires_at           INTEGER,
+  UNIQUE(provider, provider_account_id)
+);</pre>
+
+      <h3>sessions テーブル</h3>
+      <pre><span class="kw">CREATE TABLE</span> sessions (
+  id         TEXT    PRIMARY KEY,
+  user_id    TEXT    NOT NULL REFERENCES users(id),
+  token      TEXT    NOT NULL UNIQUE,
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL
+);</pre>
+
+      <h3>admin_settings テーブル</h3>
+      <pre><span class="kw">CREATE TABLE</span> admin_settings (
+  key        TEXT PRIMARY KEY,
+  value      TEXT NOT NULL,
+  updated_at INTEGER NOT NULL,
+  updated_by TEXT REFERENCES users(id)
+);</pre>
+
+      <h2>メインアプリDB（main-db）</h2>
+
+      <h3>map_pins テーブル</h3>
+      <pre><span class="kw">CREATE TABLE</span> map_pins (
+  id          TEXT    PRIMARY KEY,
+  user_id     TEXT    NOT NULL,        <span class="comment">-- 認証DBのusers.idを参照</span>
+  lat         REAL    NOT NULL,
+  lng         REAL    NOT NULL,
+  status      TEXT    NOT NULL,        <span class="comment">-- "placed" | "planned"</span>
+  title       TEXT,
+  note        TEXT,
+  photo_url   TEXT,                    <span class="comment">-- R2のURL</span>
+  material_id TEXT REFERENCES materials(id),
+  created_at  INTEGER NOT NULL,
+  updated_at  INTEGER NOT NULL
+);</pre>
+
+      <h3>materials テーブル（印刷物マスタ）</h3>
+      <pre><span class="kw">CREATE TABLE</span> materials (
+  id                TEXT    PRIMARY KEY,
+  name              TEXT    NOT NULL,      <span class="comment">-- 例: "A3ポスター2024ver"</span>
+  type              TEXT    NOT NULL,      <span class="comment">-- "poster" | "flyer"</span>
+  description       TEXT,
+  thumbnail         TEXT,                  <span class="comment">-- R2のURL</span>
+  distribute_from   INTEGER,              <span class="comment">-- 配布開始日時 (UNIX timestamp, NULL=即時)</span>
+  distribute_until  INTEGER,              <span class="comment">-- 配布終了日時 (UNIX timestamp, NULL=無期限)</span>
+  is_active         INTEGER NOT NULL DEFAULT 1,
+                                          <span class="comment">-- 1=有効 / 0=無効（手動フラグ）</span>
+  created_at        INTEGER NOT NULL,
+  updated_at        INTEGER NOT NULL
+);
+
+<span class="comment">-- 有効判定ビュー（is_active=1 かつ 配布期間内）</span>
+<span class="kw">CREATE VIEW</span> active_materials <span class="kw">AS</span>
+  <span class="kw">SELECT</span> * <span class="kw">FROM</span> materials
+  <span class="kw">WHERE</span> is_active = 1
+    <span class="kw">AND</span> (distribute_from  <span class="kw">IS NULL OR</span> distribute_from  &lt;= strftime(<span class="str">'%s'</span>, <span class="str">'now'</span>))
+    <span class="kw">AND</span> (distribute_until <span class="kw">IS NULL OR</span> distribute_until &gt;= strftime(<span class="str">'%s'</span>, <span class="str">'now'</span>));</pre>
+
+      <div class="info-box">
+        <strong>有効フラグと配布期間の関係：</strong>一般党員の在庫登録・やり取り画面には <code>active_materials</code> ビューの結果のみ表示される。
+        <code>is_active = 0</code>（手動無効化）または配布期間外のいずれかに該当すると非表示になる。既存の在庫・やり取り履歴データは保持される。
+      </div>
+
+      <h3>inventories テーブル（党員在庫）</h3>
+
+      <div class="info-box">
+        <strong>在庫の計算モデル：</strong><br>
+        <code>全体数 = initial_quantity（手動入力）+ 受け取り累計（transfer_requests）</code><br>
+        <code>現在庫 = 全体数 − 渡し累計（transfer_requests）− 一般配布済み累計（distribution_logs）</code><br>
+        <code>バー進捗 = 一般配布済み ÷ 全体数</code><br>
+        党員間やり取りの「渡す」は在庫を減らし「受け取る」は増やす。一般への配布は在庫を減らして配布数にカウントする。
+      </div>
+
+      <pre><span class="kw">CREATE TABLE</span> inventories (
+  id               TEXT    PRIMARY KEY,
+  user_id          TEXT    NOT NULL,
+  material_id      TEXT    NOT NULL REFERENCES materials(id),
+  initial_quantity INTEGER NOT NULL DEFAULT 0,
+                                    <span class="comment">-- 手動入力した初期在庫数（やり取り分は含まない）</span>
+  updated_at       INTEGER NOT NULL,
+  UNIQUE(user_id, material_id)
+);
+
+<span class="comment">-- 在庫サマリービュー（在庫数・全体数・一般配布済み数を一括集計）</span>
+<span class="kw">CREATE VIEW</span> inventory_summary <span class="kw">AS</span>
+  <span class="kw">SELECT</span>
+    i.user_id,
+    i.material_id,
+    <span class="comment">-- 全体数 = 初期在庫 + 受け取り累計</span>
+    i.initial_quantity
+      + COALESCE(tr_in.received, 0)                        <span class="kw">AS</span> total_quantity,
+    <span class="comment">-- 現在庫 = 全体数 - 渡し累計 - 一般配布済み</span>
+    i.initial_quantity
+      + COALESCE(tr_in.received, 0)
+      - COALESCE(tr_out.sent, 0)
+      - COALESCE(dl.distributed, 0)                        <span class="kw">AS</span> current_quantity,
+    COALESCE(dl.distributed, 0)                            <span class="kw">AS</span> distributed_quantity,
+    COALESCE(tr_in.received, 0)                            <span class="kw">AS</span> received_quantity,
+    COALESCE(tr_out.sent, 0)                               <span class="kw">AS</span> sent_quantity
+  <span class="kw">FROM</span> inventories i
+  <span class="kw">LEFT JOIN</span> (
+    <span class="kw">SELECT</span> to_user_id <span class="kw">AS</span> user_id, material_id,
+           SUM(quantity) <span class="kw">AS</span> received
+    <span class="kw">FROM</span> transfer_requests <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+    <span class="kw">GROUP BY</span> to_user_id, material_id
+  ) tr_in  <span class="kw">ON</span> tr_in.user_id  = i.user_id <span class="kw">AND</span> tr_in.material_id  = i.material_id
+  <span class="kw">LEFT JOIN</span> (
+    <span class="kw">SELECT</span> from_user_id <span class="kw">AS</span> user_id, material_id,
+           SUM(quantity) <span class="kw">AS</span> sent
+    <span class="kw">FROM</span> transfer_requests <span class="kw">WHERE</span> status = <span class="str">'completed'</span>
+    <span class="kw">GROUP BY</span> from_user_id, material_id
+  ) tr_out <span class="kw">ON</span> tr_out.user_id = i.user_id <span class="kw">AND</span> tr_out.material_id = i.material_id
+  <span class="kw">LEFT JOIN</span> (
+    <span class="kw">SELECT</span> user_id, material_id, SUM(quantity) <span class="kw">AS</span> distributed
+    <span class="kw">FROM</span> distribution_logs
+    <span class="kw">GROUP BY</span> user_id, material_id
+  ) dl     <span class="kw">ON</span> dl.user_id     = i.user_id <span class="kw">AND</span> dl.material_id     = i.material_id;</pre>
+
+      <h3>distribution_logs テーブル（一般配布記録）</h3>
+      <pre><span class="kw">CREATE TABLE</span> distribution_logs (
+  id           TEXT    PRIMARY KEY,
+  user_id      TEXT    NOT NULL,              <span class="comment">-- 配布した党員</span>
+  material_id  TEXT    NOT NULL REFERENCES materials(id),
+  quantity     INTEGER NOT NULL,              <span class="comment">-- 配布枚数（正の整数）</span>
+  distributed_at INTEGER NOT NULL,           <span class="comment">-- 配布日時 (UNIX timestamp)</span>
+  target_type  TEXT    NOT NULL,             <span class="comment">-- "street" | "event" | "door" | "other"</span>
+  target_label TEXT,                         <span class="comment">-- 配布対象の名称（例: "渋谷駅前街頭"）</span>
+  pin_id       TEXT REFERENCES map_pins(id), <span class="comment">-- 紐づけた地図ピン（任意）</span>
+  lat          REAL,                         <span class="comment">-- ピン未紐づけ時の手動緯度</span>
+  lng          REAL,                         <span class="comment">-- ピン未紐づけ時の手動経度</span>
+  note         TEXT,                         <span class="comment">-- メモ・備考</span>
+  created_at   INTEGER NOT NULL
+);</pre>
+
+      <div class="info-box">
+        <strong>在庫自動操作のトランザクション：</strong>
+        <ul class="doc-list" style="margin-top:8px;">
+          <li><code>POST /distributions</code> 登録時 → <code>inventories.initial_quantity</code> は変えず、<code>distribution_logs</code> に追記。<code>inventory_summary</code> ビューで <code>current_quantity</code> が自動減算される。</li>
+          <li><code>POST /transfers/:id/approve</code> 承認時 → <code>transfer_requests.status</code> を <code>completed</code> に更新。ビューが受け取り・渡し累計を再集計し在庫が増減する。</li>
+          <li>在庫不足（<code>current_quantity &lt; 配布枚数</code>）の場合は <code>422 INSUFFICIENT_STOCK</code> を返す。</li>
+        </ul>
+      </div>
+
+      <h3>transfer_requests テーブル（物資やり取り）</h3>
+      <pre><span class="kw">CREATE TABLE</span> transfer_requests (
+  id            TEXT    PRIMARY KEY,
+  from_user_id  TEXT    NOT NULL,
+  to_user_id    TEXT    NOT NULL,
+  material_id   TEXT    NOT NULL REFERENCES materials(id),
+  quantity      INTEGER NOT NULL,
+  status        TEXT    NOT NULL DEFAULT <span class="str">'pending'</span>,
+                                         <span class="comment">-- pending | approved | rejected | completed</span>
+  message       TEXT,
+  created_at    INTEGER NOT NULL,
+  updated_at    INTEGER NOT NULL
+);</pre>
+
+      <h2>インデックス</h2>
+      <pre><span class="comment">-- 地図ピン：エリア検索用</span>
+<span class="kw">CREATE INDEX</span> idx_pins_location ON map_pins(lat, lng);
+<span class="kw">CREATE INDEX</span> idx_pins_user ON map_pins(user_id);
+<span class="kw">CREATE INDEX</span> idx_pins_status ON map_pins(status);
+
+<span class="comment">-- 在庫：ユーザー別高速検索</span>
+<span class="kw">CREATE INDEX</span> idx_inv_user ON inventories(user_id);
+
+<span class="comment">-- 配布記録：集計・フィルタ用</span>
+<span class="kw">CREATE INDEX</span> idx_dist_user ON distribution_logs(user_id);
+<span class="kw">CREATE INDEX</span> idx_dist_material ON distribution_logs(material_id);
+<span class="kw">CREATE INDEX</span> idx_dist_at ON distribution_logs(distributed_at);
+<span class="kw">CREATE INDEX</span> idx_dist_pin ON distribution_logs(pin_id);
+
+<span class="comment">-- 移送リクエスト</span>
+<span class="kw">CREATE INDEX</span> idx_transfer_from ON transfer_requests(from_user_id);
+<span class="kw">CREATE INDEX</span> idx_transfer_to ON transfer_requests(to_user_id);
+<span class="kw">CREATE INDEX</span> idx_transfer_status ON transfer_requests(status);</pre>
+    </div>
+
+    <!-- ========== API ========== -->
+    <div class="section" id="section-api">
+      <div class="page-title">API設計</div>
+      <div class="page-subtitle">RESTful API エンドポイント定義（Hono on Cloudflare Workers）</div>
+
+      <div class="warn-box"><strong>認証必須：</strong>すべてのAPIエンドポイントはAuthorizationヘッダー（Bearer JWTトークン）が必要。認証サービスで発行されたトークンをAPIが検証する。</div>
+
+      <h2>認証サービス API（auth.example.com）</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>説明</th><th>認証</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/auth/sign-up/email</code></td><td>メール登録</td><td>不要</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/auth/sign-in/email</code></td><td>メールサインイン</td><td>不要</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/auth/sign-in/social?provider=google</code></td><td>Google OAuth開始</td><td>不要</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/auth/callback/google</code></td><td>Google OAuthコールバック</td><td>不要</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/auth/sign-out</code></td><td>サインアウト</td><td>必要</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/auth/session</code></td><td>現在のセッション取得</td><td>必要</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/admin/users/:id/approve</code></td><td>ユーザー承認</td><td>管理者</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/admin/users/:id/suspend</code></td><td>ユーザー停止</td><td>管理者</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/admin/settings</code></td><td>管理設定取得</td><td>管理者</td></tr>
+          <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/admin/settings</code></td><td>管理設定更新（承認フロー切替など）</td><td>管理者</td></tr>
+        </tbody>
+      </table>
+
+      <h2>地図ピン API（api.example.com/pins）</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>説明</th><th>パラメータ</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/pins</code></td><td>ピン一覧取得</td><td><code>?lat&lng&radius&status&user_id</code></td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/pins</code></td><td>ピン作成</td><td>body: lat, lng, status, title, note, material_id</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/pins/:id</code></td><td>ピン詳細取得</td><td>—</td></tr>
+          <tr><td><span class="badge badge-yellow">PATCH</span></td><td><code>/pins/:id</code></td><td>ピン更新</td><td>body: status, title, note, photo_url</td></tr>
+          <tr><td><span class="badge badge-red">DELETE</span></td><td><code>/pins/:id</code></td><td>ピン削除</td><td>—（自分のピンのみ / 管理者は全削除可）</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/pins/:id/photo</code></td><td>写真アップロード（R2）</td><td>multipart/form-data</td></tr>
+        </tbody>
+      </table>
+
+      <h2>在庫 API（api.example.com/inventories）</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/inventories</code></td><td>全党員の在庫一覧（集計含む）</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/inventories/me</code></td><td>自分の在庫取得</td></tr>
+          <tr><td><span class="badge badge-yellow">PUT</span></td><td><code>/inventories/me/:material_id</code></td><td>自分の在庫数更新</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/materials</code></td><td>印刷物マスタ一覧</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/materials</code></td><td>印刷物マスタ追加（管理者）</td></tr>
+          <tr><td><span class="badge badge-yellow">PATCH</span></td><td><code>/materials/:id</code></td><td>印刷物マスタ更新（管理者）</td></tr>
+        </tbody>
+      </table>
+
+      <h2>一般配布記録 API（api.example.com/distributions）</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>説明</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/distributions</code></td><td>自分の配布記録一覧</td><td><code>?material_id&from&to&target_type</code></td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/distributions</code></td><td>配布記録の登録（在庫自動減算）</td><td>在庫不足時 422</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/distributions/:id</code></td><td>配布記録詳細</td><td>—</td></tr>
+          <tr><td><span class="badge badge-yellow">PATCH</span></td><td><code>/distributions/:id</code></td><td>配布記録の修正</td><td>枚数変更時に在庫差分を再計算</td></tr>
+          <tr><td><span class="badge badge-red">DELETE</span></td><td><code>/distributions/:id</code></td><td>配布記録の削除（在庫を戻す）</td><td>—</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/distributions/summary</code></td><td>自分の配布集計（種別×期間）</td><td>—</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/admin/distributions</code></td><td>全党員の配布記録（管理者）</td><td><code>?user_id&material_id&from&to</code></td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/admin/distributions/summary</code></td><td>全体の集計サマリー（管理者）</td><td>選挙区・種別・期間での集計</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <strong>POST /distributions のリクエストボディ：</strong>
+        <code>material_id</code>, <code>quantity</code>, <code>distributed_at</code>, <code>target_type</code>, <code>target_label</code>（任意）, <code>pin_id</code>（任意）, <code>lat/lng</code>（任意）, <code>note</code>（任意）
+      </div>
+
+      <h2>物資やり取り API（api.example.com/transfers）</h2>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/transfers</code></td><td>自分の送受信リクエスト一覧</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/transfers</code></td><td>新規リクエスト作成</td></tr>
+          <tr><td><span class="badge badge-blue">GET</span></td><td><code>/transfers/:id</code></td><td>リクエスト詳細</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/transfers/:id/approve</code></td><td>リクエスト承認（在庫自動更新）</td></tr>
+          <tr><td><span class="badge badge-green">POST</span></td><td><code>/transfers/:id/reject</code></td><td>リクエスト拒否</td></tr>
+        </tbody>
+      </table>
+
+      <h2>レスポンス形式</h2>
+      <pre><span class="comment">// 成功時</span>
+{
+  <span class="key">"success"</span>: <span class="kw">true</span>,
+  <span class="key">"data"</span>: { ... },
+  <span class="key">"meta"</span>: { <span class="key">"total"</span>: 100, <span class="key">"page"</span>: 1 }   <span class="comment">// 一覧の場合</span>
+}
+
+<span class="comment">// エラー時</span>
+{
+  <span class="key">"success"</span>: <span class="kw">false</span>,
+  <span class="key">"error"</span>: {
+    <span class="key">"code"</span>: <span class="str">"UNAUTHORIZED"</span>,           <span class="comment">// エラーコード</span>
+    <span class="key">"message"</span>: <span class="str">"認証が必要です"</span>
+  }
+}</pre>
+
+      <h2>主なエラーコード</h2>
+      <table>
+        <thead><tr><th>HTTPステータス</th><th>コード</th><th>説明</th></tr></thead>
+        <tbody>
+          <tr><td>401</td><td><code>UNAUTHORIZED</code></td><td>トークンなし / 無効</td></tr>
+          <tr><td>403</td><td><code>FORBIDDEN</code></td><td>権限不足（承認待ち含む）</td></tr>
+          <tr><td>403</td><td><code>PENDING_APPROVAL</code></td><td>二次承認待ちのユーザー</td></tr>
+          <tr><td>404</td><td><code>NOT_FOUND</code></td><td>リソースが存在しない</td></tr>
+          <tr><td>422</td><td><code>VALIDATION_ERROR</code></td><td>バリデーションエラー</td></tr>
+          <tr><td>422</td><td><code>INSUFFICIENT_STOCK</code></td><td>在庫不足（配布記録登録時）</td></tr>
+          <tr><td>500</td><td><code>INTERNAL_ERROR</code></td><td>サーバーエラー</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== SCREENS OVERVIEW ========== -->
+    <div class="section" id="section-screens-overview">
+      <div class="page-title">画面一覧 & 画面遷移フロー</div>
+      <div class="page-subtitle">スマホ優先のモバイルファーストUI — 全16画面</div>
+
+      <h2>画面一覧</h2>
+      <table>
+        <thead><tr><th>カテゴリ</th><th>画面名</th><th>ID</th><th>対象ロール</th><th>概要</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="4">認証</td><td>ログイン</td><td><code>login</code></td><td>全員</td><td>Email/Password・Google認証の入口</td></tr>
+          <tr><td>サインアップ</td><td><code>signup</code></td><td>未登録者</td><td>名前・党員番号・都道府県・選挙区・Email/Pass入力</td></tr>
+          <tr><td>初回プロフィール補完</td><td><code>profile-complete</code></td><td>Google初回</td><td>Google認証初回時に党員番号・都道府県・選挙区のみ追加入力</td></tr>
+          <tr><td>承認待ち</td><td><code>pending</code></td><td>承認待ち</td><td>二次承認待ち案内・LINE/Signal連絡先表示</td></tr>
+          <tr><td rowspan="8">メイン</td><td>ダッシュボード</td><td><code>dashboard</code></td><td>党員</td><td>統計・受信リクエスト・地図プレビュー・在庫サマリ</td></tr>
+          <tr><td>地図</td><td><code>map</code></td><td>党員</td><td>ポスター掲載済み/予定ピン表示・フィルター</td></tr>
+          <tr><td>地図 — ピン詳細</td><td><code>map-pin-detail</code></td><td>党員</td><td>ピンの詳細情報・写真・編集/削除</td></tr>
+          <tr><td>地図 — ピン追加</td><td><code>map-add-pin</code></td><td>党員</td><td>ステータス・印刷物種別・メモ・写真アップロード</td></tr>
+          <tr><td>在庫管理</td><td><code>inventory</code></td><td>党員</td><td>自分/全党員の保有枚数・プログレスバー</td></tr>
+          <tr><td>在庫 — 編集</td><td><code>inventory-edit</code></td><td>党員</td><td>ステッパーUIで枚数を更新</td></tr>
+          <tr><td>物資やり取り</td><td><code>transfer</code></td><td>党員</td><td>受信/送信リクエスト一覧・承認/拒否</td></tr>
+          <tr><td>やり取り — リクエスト作成</td><td><code>transfer-new</code></td><td>党員</td><td>送り先・種別・枚数を指定してリクエスト送信</td></tr>
+          <tr><td rowspan="5">管理者</td><td>ユーザー承認</td><td><code>admin-users</code></td><td>管理者</td><td>承認待ちユーザー一覧・承認/拒否操作</td></tr>
+          <tr><td>管理者設定</td><td><code>admin-settings</code></td><td>管理者</td><td>二次承認ON/OFF・LINE/Signal切替・表示設定</td></tr>
+          <tr><td>印刷物マスタ</td><td><code>admin-materials</code></td><td>管理者</td><td>ポスター・チラシ種別の登録・有効/無効管理</td></tr>
+          <tr><td>配布状況マップ</td><td><code>admin-distribution</code></td><td>管理者</td><td>在庫ヒートマップ・掲載ピン・党員別クイックリスト</td></tr>
+          <tr><td>配布状況リスト</td><td><code>admin-distribution-list</code></td><td>管理者</td><td>党員別詳細・進捗バー・場所別ピン一覧・CSV出力</td></tr>
+        </tbody>
+      </table>
+
+      <h2>画面遷移フロー</h2>
+
+      <h3>① Email / Password 登録フロー</h3>
+      <div class="card">
+        <div class="card-desc">
+          <ol style="padding-left:18px; line-height:2.4; font-size:13px;">
+            <li>ログイン画面 → 「新規登録」タップ</li>
+            <li>サインアップ画面 — 名前・党員番号・都道府県・選挙区・Email・Password を入力</li>
+            <li>メール確認リンク送信 → ユーザーがメールを確認</li>
+            <li>BetterAuth が <code>pending</code> ステータスでユーザー登録</li>
+            <li>承認待ち画面 — LINE / Signal で管理者に連絡するよう案内</li>
+            <li>管理者が管理画面でユーザーを <code>approved</code> に変更</li>
+            <li>ログイン画面 → サインイン → ダッシュボードへ</li>
+          </ol>
+        </div>
+      </div>
+
+      <h3>② Google認証 登録フロー（初回）</h3>
+      <div class="card">
+        <div class="card-desc">
+          <ol style="padding-left:18px; line-height:2.4; font-size:13px;">
+            <li>ログイン画面 → 「Googleでサインイン」タップ</li>
+            <li>Google OAuth 認可画面 → 同意</li>
+            <li>初回判定：BetterAuth が <code>member_number</code> 未設定を検出</li>
+            <li><strong>初回プロフィール補完画面</strong> — 名前・メールは自動表示、党員番号・都道府県・選挙区のみ入力</li>
+            <li>BetterAuth が <code>pending</code> ステータスでユーザー登録</li>
+            <li>承認待ち画面 → 管理者が承認 → ダッシュボードへ</li>
+          </ol>
+        </div>
+      </div>
+
+      <h3>③ Google認証 ログインフロー（2回目以降）</h3>
+      <div class="card">
+        <div class="card-desc">
+          <ol style="padding-left:18px; line-height:2.4; font-size:13px;">
+            <li>ログイン画面 → 「Googleでサインイン」タップ</li>
+            <li>Google OAuth 認可 → BetterAuth がセッション発行</li>
+            <li>ステータス確認：<code>approved</code> → ダッシュボードへ / <code>pending</code> → 承認待ち画面</li>
+          </ol>
+        </div>
+      </div>
+
+      <h2>ナビゲーション構造</h2>
+      <p>認証済みユーザーはボトムナビゲーションバー（5タブ）でメイン機能を切り替える。管理者専用画面はマイページ内のメニューからアクセスする。</p>
+      <table>
+        <thead><tr><th>タブ</th><th>アイコン</th><th>遷移先</th></tr></thead>
+        <tbody>
+          <tr><td>ホーム</td><td>🏠</td><td>ダッシュボード</td></tr>
+          <tr><td>地図</td><td>🗺️</td><td>地図画面 → ピン詳細 / ピン追加</td></tr>
+          <tr><td>在庫</td><td>📦</td><td>在庫管理 → 在庫編集</td></tr>
+          <tr><td>やり取り</td><td>🔄</td><td>物資やり取り → リクエスト作成</td></tr>
+          <tr><td>マイページ</td><td>👤</td><td>プロフィール / 管理者メニュー（管理者のみ）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== SCREENS AUTH ========== -->
+    <div class="section" id="section-screens-auth">
+      <div class="page-title">認証画面 設計</div>
+      <div class="page-subtitle">ログイン・サインアップ・初回プロフィール補完・承認待ち</div>
+
+      <h2>ログイン画面</h2>
+      <table>
+        <thead><tr><th>要素</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>ヘッダー</td><td>「日本保守党」ラベル + アプリ名 + 「党員専用」注記</td></tr>
+          <tr><td>入力</td><td>メールアドレス、パスワード</td></tr>
+          <tr><td>ボタン</td><td>サインイン（primary）、Googleでサインイン（outline）</td></tr>
+          <tr><td>リンク</td><td>新規登録ページへ</td></tr>
+          <tr><td>エラー表示</td><td>認証失敗時インライン表示</td></tr>
+        </tbody>
+      </table>
+
+      <h2>サインアップ画面</h2>
+      <table>
+        <thead><tr><th>フィールド</th><th>種別</th><th>バリデーション</th><th>備考</th></tr></thead>
+        <tbody>
+          <tr><td>お名前</td><td>テキスト</td><td>必須</td><td></td></tr>
+          <tr><td>党員番号</td><td>テキスト</td><td>必須・形式チェック</td><td>例: 2024-001234</td></tr>
+          <tr><td>都道府県</td><td>プルダウン</td><td>必須</td><td>47都道府県</td></tr>
+          <tr><td>選挙区</td><td>プルダウン（連動）</td><td>必須</td><td>都道府県選択後に衆議院小選挙区を動的表示</td></tr>
+          <tr><td>メールアドレス</td><td>email</td><td>必須・形式チェック・重複チェック</td><td></td></tr>
+          <tr><td>パスワード</td><td>password</td><td>必須・8文字以上</td><td></td></tr>
+          <tr><td>パスワード（確認）</td><td>password</td><td>必須・一致チェック</td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="info-box"><strong>二次承認バナー：</strong>フォーム下部に「登録完了後、管理者にLINEにてご連絡いただき承認を受けてください」の案内を常時表示する。</div>
+
+      <h2>初回プロフィール補完画面（Google認証専用）</h2>
+      <p>Google OAuth初回認証後、<code>member_number</code> 未設定のユーザーにのみ表示される画面。名前・メールはGoogleアカウントから自動取得し読み取り専用で表示する。</p>
+      <table>
+        <thead><tr><th>フィールド</th><th>種別</th><th>取得元</th><th>操作</th></tr></thead>
+        <tbody>
+          <tr><td>お名前</td><td>表示のみ</td><td>Google Account</td><td>読み取り専用（緑カードで表示）</td></tr>
+          <tr><td>メールアドレス</td><td>表示のみ</td><td>Google Account</td><td>読み取り専用（緑カードで表示）</td></tr>
+          <tr><td>党員番号</td><td>テキスト入力</td><td>ユーザー入力</td><td>必須</td></tr>
+          <tr><td>都道府県</td><td>プルダウン</td><td>ユーザー入力</td><td>必須</td></tr>
+          <tr><td>選挙区</td><td>プルダウン（連動）</td><td>ユーザー入力</td><td>必須・都道府県と連動</td></tr>
+        </tbody>
+      </table>
+      <div class="info-box"><strong>ステップインジケーター：</strong>「① Google認証 → ② 情報入力 → ③ 承認待ち」の3ステップを画面上部に表示し、現在地を視覚的に案内する。</div>
+
+      <h2>承認待ち画面</h2>
+      <table>
+        <thead><tr><th>要素</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>ステータス表示</td><td>「承認待ちです」メッセージ</td></tr>
+          <tr><td>手順案内</td><td>ステップ形式で「LINE/Signalで管理者に連絡」→「承認後に自動更新」を案内</td></tr>
+          <tr><td>連絡先</td><td>管理者設定で登録したLINE ID / Signal番号を表示</td></tr>
+          <tr><td>自動更新</td><td>承認後にページが自動リロードされアクセス可能になる（ポーリングまたはWebSocket）</td></tr>
+          <tr><td>サインアウト</td><td>別アカウントで再登録できるようサインアウトボタンを設置</td></tr>
+        </tbody>
+      </table>
+
+      <h2>都道府県・選挙区連動仕様</h2>
+      <p>サインアップ画面・初回プロフィール補完画面の両方で共通の連動ロジックを使用する。</p>
+      <table>
+        <thead><tr><th>都道府県</th><th>選挙区数</th><th>例</th></tr></thead>
+        <tbody>
+          <tr><td>東京都</td><td>30区</td><td>東京1区（千代田・港・新宿一部）〜 東京30区</td></tr>
+          <tr><td>神奈川県</td><td>18区</td><td>神奈川1区（横浜市西・神奈川区）〜</td></tr>
+          <tr><td>大阪府</td><td>19区</td><td>大阪1区（大阪市中央・浪速区）〜</td></tr>
+          <tr><td>愛知県</td><td>15区</td><td>愛知1区（名古屋市東・北・守山区）〜</td></tr>
+          <tr><td>その他</td><td>各県の定数</td><td>公職選挙法の小選挙区割りに準拠</td></tr>
+        </tbody>
+      </table>
+      <div class="warn-box"><strong>実装注意：</strong>選挙区データは法改正により変更される場合がある。マスターデータとして管理者が更新できる仕組みが望ましい。</div>
+    </div>
+
+    <!-- ========== SCREENS MAIN ========== -->
+    <div class="section" id="section-screens-main">
+      <div class="page-title">メイン画面 設計</div>
+      <div class="page-subtitle">ダッシュボード・地図・在庫管理・物資やり取り</div>
+
+      <h2>ダッシュボード</h2>
+      <p>ログイン後の起点となるホーム画面。主要情報をコンパクトに集約する。</p>
+      <table>
+        <thead><tr><th>ウィジェット</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>挨拶</td><td>「おはようございます、◯◯さん」</td></tr>
+          <tr><td>統計カード（2×2）</td><td>自分のピン数 / 保有在庫合計 / やり取り中件数 / 全体ピン数</td></tr>
+          <tr><td>受信リクエスト</td><td>承認待ちリクエストを最大3件プレビュー表示。「すべて見る」でやり取り画面へ</td></tr>
+          <tr><td>近くのピン（地図プレビュー）</td><td>現在地周辺の簡易地図。タップで地図画面へ</td></tr>
+          <tr><td>在庫サマリ</td><td>種別ごとの保有枚数とプログレスバー</td></tr>
+        </tbody>
+      </table>
+
+      <h2>地図画面</h2>
+      <table>
+        <thead><tr><th>要素</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>地図ライブラリ</td><td>Leaflet.js + OpenStreetMap タイル</td></tr>
+          <tr><td>ピン種別</td><td>掲載済み（青）/ 掲載予定（橙）/ 自分のピン（赤）</td></tr>
+          <tr><td>検索バー</td><td>地図上部に住所・場所名検索（ジオコーディング）</td></tr>
+          <tr><td>フィルターチップ</td><td>「掲載済み」「予定」「自分のみ」をトグル切替</td></tr>
+          <tr><td>ズームコントロール</td><td>＋ / － / 現在地ボタン</td></tr>
+          <tr><td>FABボタン</td><td>右下のフローティングボタンでピン追加モードへ</td></tr>
+          <tr><td>凡例</td><td>左下にピン色の意味を常時表示</td></tr>
+        </tbody>
+      </table>
+
+      <h3>ピン詳細シート</h3>
+      <p>ピンタップでボトムシートが出現。登録者・日時・印刷物種別・メモ・設置写真を表示。自分のピンは編集・削除ボタンを表示。管理者は全ピンを編集・削除可能。</p>
+
+      <h3>ピン追加画面</h3>
+      <table>
+        <thead><tr><th>フィールド</th><th>種別</th><th>必須</th></tr></thead>
+        <tbody>
+          <tr><td>場所（地図タップで自動入力）</td><td>表示のみ</td><td>必須</td></tr>
+          <tr><td>ステータス</td><td>掲載済み / 掲載予定 トグル選択</td><td>必須</td></tr>
+          <tr><td>印刷物の種類</td><td>プルダウン（materialsマスタから）</td><td>任意</td></tr>
+          <tr><td>場所のメモ</td><td>テキストエリア</td><td>任意</td></tr>
+          <tr><td>設置写真</td><td>カメラ / ギャラリーから選択 → R2アップロード</td><td>任意</td></tr>
+        </tbody>
+      </table>
+
+      <h2>在庫管理画面</h2>
+      <table>
+        <thead><tr><th>タブ</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>自分の在庫</td><td>種別ごとの保有枚数・プログレスバー・在庫なしの場合「やり取りでリクエストできます」案内</td></tr>
+          <tr><td>全党員</td><td>全員の在庫を一覧表示。選挙区・氏名でフィルター可</td></tr>
+        </tbody>
+      </table>
+      <p>右上の編集ボタンから在庫編集画面へ遷移。ステッパーUI（＋／－ボタン）で直感的に枚数を更新する。</p>
+
+      <h2>物資やり取り画面</h2>
+      <table>
+        <thead><tr><th>タブ</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>受信</td><td>自分宛のリクエスト一覧。「承認する」「拒否」ボタン付き。承認時に双方の在庫が自動更新。</td></tr>
+          <tr><td>送信</td><td>自分が送ったリクエスト一覧とステータス</td></tr>
+          <tr><td>完了</td><td>完了済みやり取りの履歴</td></tr>
+        </tbody>
+      </table>
+
+      <h3>リクエスト作成画面</h3>
+      <table>
+        <thead><tr><th>フィールド</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>送り先の党員</td><td>党員一覧から選択（名前・選挙区・在庫数を表示）</td></tr>
+          <tr><td>印刷物の種類</td><td>リスト選択（相手の在庫数もリアルタイム表示）</td></tr>
+          <tr><td>枚数</td><td>ステッパーUI。相手の残在庫を超えないようバリデーション</td></tr>
+          <tr><td>メッセージ</td><td>任意のテキスト（最大200文字）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ========== SCREENS ADMIN ========== -->
+    <div class="section" id="section-screens-admin">
+      <div class="page-title">管理者画面 設計</div>
+      <div class="page-subtitle">ユーザー承認・設定・印刷物マスタ・配布状況</div>
+
+      <h2>ユーザー承認画面</h2>
+      <p>承認待ちユーザーを一覧表示し、個別に承認・拒否を行う。</p>
+      <table>
+        <thead><tr><th>タブ</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td>承認待ち</td><td>pendingユーザー一覧。バッジで件数表示。認証方式（Google/Email）・登録日時を表示。</td></tr>
+          <tr><td>承認済み</td><td>approvedユーザー一覧。停止操作も可能。</td></tr>
+          <tr><td>全員</td><td>全ステータスのユーザー一覧</td></tr>
+        </tbody>
+      </table>
+      <p>各カードに「✓ 承認する」「✕ 拒否」ボタンを表示。承認するとステータスが <code>approved</code> に変更され、ユーザーがアプリを利用可能になる。</p>
+
+      <h2>管理者設定画面</h2>
+      <table>
+        <thead><tr><th>設定項目</th><th>種別</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>二次承認フロー</td><td>トグル ON/OFF</td><td>OFFにするとサインアップ後すぐ approved になる</td></tr>
+          <tr><td>連絡方法</td><td>LINE / Signal 選択</td><td>承認待ち画面に表示する連絡手段</td></tr>
+          <tr><td>管理者連絡先</td><td>テキスト入力</td><td>LINE ID または Signal番号。承認待ち画面に表示される</td></tr>
+          <tr><td>全党員の在庫を共有</td><td>トグル ON/OFF</td><td>OFFにすると自分の在庫のみ閲覧可能</td></tr>
+          <tr><td>地図ピンを全員に公開</td><td>トグル ON/OFF</td><td>OFFにすると自分のピンのみ表示</td></tr>
+        </tbody>
+      </table>
+
+      <h2>印刷物マスタ管理画面</h2>
+      <p>管理者がポスター・チラシの種別を登録・管理する。一般党員の在庫・やり取り画面のプルダウンにここで登録した種別が表示される。</p>
+      <table>
+        <thead><tr><th>フィールド</th><th>種別</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>名前</td><td>テキスト</td><td>例：A3ポスター（2024年版）</td></tr>
+          <tr><td>種別</td><td>選択</td><td>ポスター / チラシ</td></tr>
+          <tr><td>説明</td><td>テキストエリア</td><td>任意のメモ</td></tr>
+          <tr><td>サムネイル</td><td>画像アップロード</td><td>R2に保存</td></tr>
+          <tr><td>配布開始日</td><td>日付ピッカー</td><td>未設定の場合は登録直後から有効（即時）</td></tr>
+          <tr><td>配布終了日</td><td>日付ピッカー</td><td>未設定の場合は無期限。終了日を過ぎると自動的に非表示</td></tr>
+          <tr><td>有効フラグ</td><td>トグル ON/OFF</td><td>手動で即時無効化。期間内でも OFF にすると非表示になる</td></tr>
+        </tbody>
+      </table>
+
+      <h3>有効状態の判定ロジック</h3>
+      <table>
+        <thead><tr><th>有効フラグ</th><th>配布期間</th><th>表示状態</th><th>バッジ表示</th></tr></thead>
+        <tbody>
+          <tr><td>ON</td><td>期間内（または未設定）</td><td>✅ 表示（有効）</td><td><span style="background:#edf7f1;color:#2d7a4a;padding:2px 8px;border-radius:4px;font-size:11px;">有効</span></td></tr>
+          <tr><td>ON</td><td>配布開始前</td><td>🔜 非表示（開始待ち）</td><td><span style="background:#e8f0f8;color:#1a3a5c;padding:2px 8px;border-radius:4px;font-size:11px;">開始待ち</span></td></tr>
+          <tr><td>ON</td><td>配布終了後</td><td>⏹ 非表示（期間終了）</td><td><span style="background:#f0ede8;color:#9a9890;padding:2px 8px;border-radius:4px;font-size:11px;">期間終了</span></td></tr>
+          <tr><td>OFF</td><td>任意</td><td>🚫 非表示（手動無効）</td><td><span style="background:#fdf0ee;color:#c8392b;padding:2px 8px;border-radius:4px;font-size:11px;">無効</span></td></tr>
+        </tbody>
+      </table>
+      <div class="info-box">一般党員の在庫登録・やり取り画面には「有効」状態の印刷物のみ表示される。管理者画面では全状態を一覧表示し、バッジで状態を識別できる。</div>
+
+      <h2>配布状況マップ</h2>
+      <p>管理者専用の俯瞰ビュー。印刷物の在庫分布と掲載状況を地図上で視覚的に確認できる。</p>
+      <table>
+        <thead><tr><th>要素</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>印刷物フィルター</td><td>「全種別 / A3ポスター / チラシ（秋版）」などをチップで切替</td></tr>
+          <tr><td>在庫ヒートサークル</td><td>党員の居住エリアに円を表示。円の大きさ＝在庫枚数。中央に枚数を数値表示。</td></tr>
+          <tr><td>掲載ピン</td><td>通常の地図画面と同じピン（掲載済み/予定）を重ねて表示</td></tr>
+          <tr><td>サマリーバー</td><td>地図上部に「総在庫 / 掲載済推定 / 担当党員数」をコンパクト表示</td></tr>
+          <tr><td>党員別クイックリスト</td><td>地図下に党員の保有枚数・配布済の簡易ドット表示</td></tr>
+          <tr><td>凡例</td><td>ヒートサークル・掲載済ピン・予定ピンの意味を常時表示</td></tr>
+          <tr><td>リスト切替</td><td>右上ボタンで配布状況リスト画面に遷移</td></tr>
+        </tbody>
+      </table>
+
+      <h2>配布状況リスト</h2>
+      <p>党員ごとの詳細な配布状況を数値・進捗バーで確認できる一覧画面。CSVエクスポート対応。</p>
+      <table>
+        <thead><tr><th>要素</th><th>詳細</th></tr></thead>
+        <tbody>
+          <tr><td>印刷物タブ</td><td>種別ごとに切替（A3ポスター / チラシ / 全種別）</td></tr>
+          <tr><td>集計ヘッダー</td><td>総在庫 / 配布済（推定）/ 掲載ピン数 / 担当党員数 + 全体進捗バー</td></tr>
+          <tr><td>党員カード</td><td>氏名・選挙区・党員番号 / 保有枚数 / 掲載済ピン数・予定ピン数・配布済推定枚数 / 進捗バー（%）</td></tr>
+          <tr><td>場所別ピン一覧</td><td>掲載済・予定ピンを登録者・日付付きで一覧表示</td></tr>
+          <tr><td>CSVエクスポート</td><td>右上ボタンで全データをCSV出力</td></tr>
+        </tbody>
+      </table>
+      <div class="info-box"><strong>配布済枚数の推定ロジック：</strong>「配布済」は掲載済みピン数から推計する。ピン1つにつき1枚のポスターが使われたと仮定し、<code>掲載済ピン数 × 1</code> を配布済推定枚数とする。実際の枚数はやり取りの承認履歴からも算出可能。</div>
+    </div>
+
+    <!-- ========== ROADMAP ========== -->
+    <div class="section" id="section-roadmap">
+      <div class="page-title">開発ロードマップ</div>
+      <div class="page-subtitle">党内運用を最優先とした4フェーズ段階リリース計画</div>
+
+      <h2>基本方針</h2>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">🎯 MVP ファースト</div>
+          <div class="card-desc">まず党内で実際に使える最小構成を素早くリリース。フィードバックを受けながら機能を追加していく。</div>
+        </div>
+        <div class="card">
+          <div class="card-title">🔗 依存関係を意識</div>
+          <div class="card-desc">認証 → 地図 → 在庫 → 配布記録の順で積み上げ。後のフェーズが前のフェーズに依存する構造。</div>
+        </div>
+      </div>
+
+      <!-- PHASE 1 -->
+      <h2>Phase 1 — 認証基盤 & ユーザー管理</h2>
+      <div class="info-box"><strong>目標：</strong>党員がログインできる状態にする。他フェーズすべての前提となる基盤。独立認証サービスをこの段階で完成させ、将来の他アプリ連携も見据える。</div>
+
+      <table>
+        <thead><tr><th>カテゴリ</th><th>タスク</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="4">認証サービス</td><td>BetterAuth セットアップ</td><td>Cloudflare Workers + D1（auth-db）で認証サーバーを独立デプロイ</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>Email / Password 認証</td><td>サインアップ・サインイン・メール確認フロー</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>Google OAuth2</td><td>Googleサインイン + 初回プロフィール補完フロー</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>OIDC エンドポイント公開</td><td>将来の他アプリ連携用。<code>/.well-known/openid-configuration</code> など</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+          <tr><td rowspan="3">ユーザー管理</td><td>党員番号・都道府県・選挙区の登録</td><td>サインアップ・初回プロフィール補完画面での入力</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>ステータス管理</td><td><code>pending / approved / admin / suspended</code> の4ステータス</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>二次承認フロー</td><td>管理者画面からの承認・拒否 + LINE/Signal 連絡先案内 + ON/OFF トグル</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>管理者設定</td><td>管理者設定画面</td><td>承認フロー切替・LINE/Signal 切替・連絡先設定</td><td><span class="badge badge-red">必須</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 1 完了の定義</h3>
+      <ul class="doc-list">
+        <li>Email / Google 両方でサインアップ・サインインできる</li>
+        <li>管理者が党員を承認・拒否できる</li>
+        <li>承認待ち党員はアプリにアクセスできない</li>
+        <li>管理者が二次承認フローをON/OFFできる</li>
+      </ul>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">📦 Phase 1 成果物</div>
+          <div class="card-desc">認証サービス（Workers）、auth-db（D1）、ログイン画面、サインアップ画面、初回プロフィール補完画面、承認待ち画面、管理者ユーザー承認画面、管理者設定画面</div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚙️ インフラ整備</div>
+          <div class="card-desc">Cloudflare Workers / D1 / KV の初期セットアップ、<code>auth.example.com</code> のデプロイ、CI/CD パイプライン構築</div>
+        </div>
+      </div>
+
+      <!-- PHASE 2 -->
+      <h2>Phase 2 — 地図機能 & 印刷物マスタ</h2>
+      <div class="info-box"><strong>目標：</strong>ポスター掲載場所を地図で共有できる状態にする。在庫・配布記録の土台となる「印刷物マスタ」もこのフェーズで整備する。</div>
+
+      <table>
+        <thead><tr><th>カテゴリ</th><th>タスク</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="2">インフラ</td><td>メインアプリ基盤構築</td><td>Hono on Workers セットアップ、main-db（D1）作成、R2 バケット作成</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>メインアプリ フロント</td><td>React SPA 構築、ボトムナビ、認証トークン連携</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td rowspan="4">地図機能</td><td>地図表示</td><td>OpenStreetMap + Leaflet.js の組み込み</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>ピン追加・編集・削除</td><td>タップで場所登録。ステータス（掲載済み/予定）・メモ設定</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>ピン一覧・フィルター</td><td>ステータス・自分のみフィルター</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>写真アップロード</td><td>設置写真を R2 に保存・表示</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+          <tr><td rowspan="2">印刷物マスタ</td><td>マスタ CRUD</td><td>管理者が種別・有効期間を登録・管理。<code>active_materials</code> ビュー</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>ダッシュボード（簡易版）</td><td>地図プレビュー・基本統計を表示</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 2 完了の定義</h3>
+      <ul class="doc-list">
+        <li>党員が地図上にピンを追加・共有できる</li>
+        <li>管理者が印刷物種別を登録できる</li>
+        <li>ダッシュボードに地図プレビューが表示される</li>
+      </ul>
+
+      <div class="card">
+        <div class="card-title">📦 Phase 2 成果物</div>
+        <div class="card-desc">メインアプリ（Workers + React）、main-db スキーマ（map_pins / materials）、地図画面・ピン詳細・ピン追加、印刷物マスタ管理画面、ダッシュボード（簡易版）</div>
+      </div>
+
+      <!-- PHASE 3 -->
+      <h2>Phase 3 — 在庫管理 & 党員間やり取り</h2>
+      <div class="info-box"><strong>目標：</strong>誰が何枚持っているかを可視化し、党員間で印刷物を融通できるようにする。</div>
+
+      <table>
+        <thead><tr><th>カテゴリ</th><th>タスク</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3">在庫管理</td><td>初期在庫入力</td><td>党員が <code>initial_quantity</code> を登録。<code>inventory_summary</code> ビューで集計</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>在庫一覧（自分・全党員）</td><td>積み上げバー（配布済み＋現在庫）で可視化</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>ダッシュボード 在庫サマリー更新</td><td>Phase 2 の簡易版を在庫データと連携</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td rowspan="3">党員間やり取り</td><td>リクエスト作成・送信</td><td>送り先・種別・枚数・メッセージを指定して送信</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>承認・拒否フロー</td><td>受け取り側の承認で <code>transfer_requests.status = completed</code> に更新。在庫ビューに自動反映</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>やり取り履歴</td><td>送受信履歴の一覧表示</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 3 完了の定義</h3>
+      <ul class="doc-list">
+        <li>全党員の在庫が一覧で確認できる</li>
+        <li>党員間で印刷物のリクエスト・承認ができる</li>
+        <li>やり取り承認後に在庫数が自動で増減する</li>
+      </ul>
+
+      <div class="card">
+        <div class="card-title">📦 Phase 3 成果物</div>
+        <div class="card-desc">在庫管理画面・在庫編集画面、物資やり取り画面・リクエスト作成画面、<code>inventories / transfer_requests</code> テーブル + <code>inventory_summary</code> ビュー、ダッシュボード完成版</div>
+      </div>
+
+      <!-- PHASE 4 -->
+      <h2>Phase 4 — 一般配布記録 & 管理者分析</h2>
+      <div class="info-box"><strong>目標：</strong>一般の方への配布実績を記録し、活動全体を数値で把握できるようにする。管理者が俯瞰できる分析・集計ビューを整備する。</div>
+
+      <table>
+        <thead><tr><th>カテゴリ</th><th>タスク</th><th>詳細</th><th>優先度</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3">配布記録</td><td>配布記録の登録</td><td>枚数・日時・場所・配布対象・メモを記録。在庫を自動減算（<code>distribution_logs</code> INSERT）</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>配布記録一覧・集計</td><td>日付別グループ、今月・累計表示、種別フィルター</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>地図ピンとの連携</td><td>配布記録登録時に既存ピンを紐づけ or 新規ピン作成</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+          <tr><td rowspan="3">管理者分析</td><td>配布状況マップ</td><td>在庫ヒートサークル + 掲載ピン。印刷物フィルター対応</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>配布状況リスト</td><td>党員別詳細カード（保有・配布済・進捗%）+ 場所別ピン一覧</td><td><span class="badge badge-red">必須</span></td></tr>
+          <tr><td>CSV エクスポート</td><td>全データを CSV で出力</td><td><span class="badge badge-yellow">推奨</span></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Phase 4 完了の定義</h3>
+      <ul class="doc-list">
+        <li>一般への配布記録を登録すると在庫が自動で減り、配布済みにカウントされる</li>
+        <li>管理者が全党員の活動状況を地図・リストで俯瞰できる</li>
+        <li>CSV でデータをエクスポートできる</li>
+      </ul>
+
+      <div class="card">
+        <div class="card-title">📦 Phase 4 成果物</div>
+        <div class="card-desc">配布記録画面・配布記録登録画面、<code>distribution_logs</code> テーブル + 在庫ビュー更新、配布状況マップ・リスト（管理者）、CSV エクスポート機能</div>
+      </div>
+
+      <!-- SUMMARY TABLE -->
+      <h2>フェーズサマリー</h2>
+      <table>
+        <thead><tr><th>フェーズ</th><th>テーマ</th><th>主な成果物</th><th>前提</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-red">Phase 1</span></td>
+            <td>認証基盤 & ユーザー管理</td>
+            <td>BetterAuth サーバー、ログイン/登録/承認画面</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-yellow">Phase 2</span></td>
+            <td>地図機能 & 印刷物マスタ</td>
+            <td>地図・ピン管理、印刷物マスタ、ダッシュボード（簡易）</td>
+            <td>Phase 1</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-blue">Phase 3</span></td>
+            <td>在庫管理 & 党員間やり取り</td>
+            <td>在庫一覧・編集、やり取りフロー、ダッシュボード完成</td>
+            <td>Phase 1・2</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-green">Phase 4</span></td>
+            <td>一般配布記録 & 管理者分析</td>
+            <td>配布記録、配布状況マップ・リスト、CSV出力</td>
+            <td>Phase 1・2・3</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="warn-box">
+        <strong>依存関係の注意：</strong>
+        各フェーズは前のフェーズの完了を前提とします。特に <code>inventory_summary</code> ビューは <code>transfer_requests</code>（Phase 3）と <code>distribution_logs</code>（Phase 4）の両方を参照するため、Phase 3 では <code>distribution_logs</code> が存在しない前提で LEFT JOIN が空を返すようにマイグレーションを設計してください。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const sections = {
+    overview: 'プロジェクト概要',
+    requirements: '要件定義',
+    architecture: 'システム構成図',
+    auth: '認証サービス設計',
+    db: 'DB設計',
+    api: 'API設計',
+    'screens-overview': '画面設計 / 画面一覧 & フロー',
+    'screens-auth': '画面設計 / 認証画面',
+    'screens-main': '画面設計 / メイン画面',
+    'screens-admin': '画面設計 / 管理者画面',
+    'roadmap': '開発ロードマップ',
+  };
+
+  function showSection(key) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    document.getElementById('section-' + key).classList.add('active');
+
+    const btn = [...document.querySelectorAll('.nav-item')].find(b => b.getAttribute('onclick').includes("'" + key + "'"));
+    if (btn) btn.classList.add('active');
+
+    document.getElementById('breadcrumb').innerHTML = '設計書 / <span>' + sections[key] + '</span>';
+    window.scrollTo(0, 0);
+  }
+</script>
+
+</body>
+</html>
